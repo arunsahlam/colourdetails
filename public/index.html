@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Color Preview</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Color Preview</h1>
+
+    <form id="color-form">
+      <label for="color-input">Enter a color code (hex):</label>
+      <input
+        id="color-input"
+        type="text"
+        placeholder="e.g. ff5733 or #ff5733"
+        autocomplete="off"
+        required
+      />
+      <button type="submit">Preview</button>
+    </form>
+
+    <div id="preview" class="preview">
+      <div class="preview-swatch" id="preview-swatch"></div>
+      <div class="preview-info" id="preview-info">
+        Enter a color code to see a preview.
+      </div>
+    </div>
+  </main>
+
+  <script src="/app.js"></script>
+</body>
+</html>
