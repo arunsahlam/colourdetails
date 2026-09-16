@@ -19,7 +19,6 @@ function applyColor(hex6) {
 
   document.documentElement.style.setProperty("--bg", color);
 
-  // Adjust text color for contrast (simple heuristic)
   const r = parseInt(full.slice(0, 2), 16);
   const g = parseInt(full.slice(2, 4), 16);
   const b = parseInt(full.slice(4, 6), 16);
@@ -38,10 +37,18 @@ function applyColor(hex6) {
 }
 
 function readColorFromPath() {
-  // Supports /color/ff5733 or /color/#ff5733
   const match = window.location.pathname.match(/^\/color\/([0-9a-fA-F#]+)$/);
   if (!match) return null;
   return normalizeColor(match[1]);
+}
+
+function applyCurrentPathColor() {
+  const color = readColorFromPath();
+  if (!color) return;
+
+  const input = document.getElementById("color-input");
+  applyColor(color);
+  if (input) input.value = color;
 }
 
 function updateURLAndApply(colorHex) {
@@ -49,20 +56,10 @@ function updateURLAndApply(colorHex) {
 
   if (window.history && window.history.pushState) {
     window.history.pushState({ color: colorHex }, "", path);
-    // Re-apply color after URL change
+    // Immediately apply the new color
     applyColor(colorHex);
   } else {
-    // Fallback: just reload
     window.location.href = path;
-  }
-}
-
-function handleLocationChange() {
-  const pathColor = readColorFromPath();
-  if (pathColor) {
-    const input = document.getElementById("color-input");
-    applyColor(pathColor);
-    if (input) input.value = pathColor;
   }
 }
 
@@ -70,23 +67,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("color-form");
   const input = document.getElementById("color-input");
 
-  // Apply color from URL on load (for direct links like /color/ff5733)
-  handleLocationChange();
+  // On initial load, apply color from URL if present
+  applyCurrentPathColor();
 
   if (!form || !input) return;
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+
     const raw = input.value;
     const color = normalizeColor(raw);
+
     if (!color) {
       alert("Please enter a valid 3 or 6 character hex color (e.g. ff5733 or #ff5733).");
       return;
     }
-    // Update URL and apply color in one go
+
+    // Update URL and apply color immediately
     updateURLAndApply(color);
   });
 
-  // Handle browser back/forward navigation
-  window.addEventListener("popstate", handleLocationChange);
+  // Handle browser back/forward
+  window.addEventListener("popstate", applyCurrentPathColor);
 });
