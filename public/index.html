@@ -2,51 +2,80 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Color Preview</title>
+  <title>Color Preview &amp; Converter</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Preview any hex color: color spaces, harmonies, shades, tints, contrast, and copy-ready CSS." />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="canonical" id="canonical-link" href="/" />
   <link rel="stylesheet" href="/style.css" />
 
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EYJ4WV7T5W"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-EYJ4WV7T5W');
-  </script>
+  <!-- Fonts: display + body -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Structured data (updated at runtime by app.js) -->
+  <script type="application/ld+json" id="jsonld">{"@context":"https://schema.org","@type":"WebPage","name":"Color Preview & Converter"}</script>
 </head>
 <body>
   <main class="container">
-    <h1>Color Preview</h1>
+    <header class="page-header">
+      <h1>Color Preview</h1>
+      <button id="theme-toggle" class="theme-btn" type="button" aria-label="Cycle theme">◐ Auto</button>
+    </header>
 
-    <form id="color-form">
+    <noscript>
+      <div class="notice">
+        <p>JavaScript is required for the interactive color preview. You can still view color details on the <a href="/colour/index">server-rendered pages</a>.</p>
+      </div>
+    </noscript>
+
+    <form id="color-form" novalidate>
       <label for="color-input">Enter a color code (hex):</label>
-      <input
-        id="color-input"
-        type="text"
-        placeholder="e.g. ff5733 or #ff5733"
-        autocomplete="off"
-        required
-      />
-      <button type="submit">Preview</button>
+      <div class="input-group">
+        <input
+          id="color-input"
+          type="text"
+          placeholder="e.g. ff5733 or #ff5733"
+          autocomplete="off"
+          autocapitalize="off"
+          autocorrect="off"
+          spellcheck="false"
+          inputmode="text"
+          aria-describedby="color-error"
+          required
+        />
+        <button type="submit">Preview</button>
+      </div>
+      <p id="color-error" class="form-error" role="alert" aria-live="polite" hidden></p>
     </form>
 
-    <div id="preview" class="preview">
+    <section id="preview" class="preview" aria-label="Color Preview">
       <div class="preview-swatch" id="preview-swatch"></div>
-      <div class="preview-info" id="preview-info">
+      <div class="preview-info" id="preview-info" aria-live="polite">
         Enter a color code to see a preview.
       </div>
-    </div>
+    </section>
 
     <!-- Dynamic detail sections populated by app.js -->
+    <section id="verdict" class="card"></section>
+    <section id="compare" class="card"></section>
     <section id="color-spaces" class="card"></section>
     <section id="base-numbers" class="card"></section>
+    <section id="color-wheel-card" class="card">
+      <h2>Color Wheel</h2>
+      <div class="wheel-overview" id="wheel-overview"></div>
+    </section>
     <section id="harmonies" class="card"></section>
     <section id="monochromatic" class="card"></section>
+    <section id="alternatives" class="card"></section>
     <section id="related-colors" class="card"></section>
     <section id="css-examples" class="card"></section>
   </main>
 
+  <!-- Load in dependency order -->
+  <script src="/color.js"></script>
+  <script src="/harmony.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

@@ -1,377 +1,170 @@
 // ============================================================
-// Color Conversion Utilities (ported from ColoursUtility.php)
+// app.js — Routing, rendering, DOM wiring
+// Depends on color.js and harmony.js
 // ============================================================
 
-// Normalize input like "ff5733", "#ff5733", "FF5733" → "ff5733"
-function normalizeColor(input) {
-  if (!input) return null;
-  const cleaned = input.trim().replace(/^#/, "");
-  if (!/^[0-9a-fA-F]{3}$|^[0-9a-fA-F]{6}$/.test(cleaned)) return null;
-  return cleaned.toLowerCase();
-}
+// ============================================================
+// Theme (light / dark / auto)
+// ============================================================
+const Theme = (() => {
+  const KEY = "beff00.theme";
+  const root = document.documentElement;
+  let mode = "auto"; // 'auto' | 'light' | 'dark'
+  let colorIsLight = true;
+  let onChangeCbs = [];
 
-function expandShortHex(hex) {
-  if (hex.length === 3) {
-    return hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+  function systemPrefersDark() {
+    return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
   }
-  return hex;
-}
 
-// Validate hex and return 6-digit hex (or default "000000")
-function validateHex(hex, defaultColor = true) {
-  if (!hex) return defaultColor ? "000000" : false;
-  let h = hex.replace(/^#/, "");
-  if (/^[0-9a-fA-F]{6}$/.test(h)) return h.toLowerCase();
-  if (/^[0-9a-fA-F]{3}$/.test(h)) return expandShortHex(h.toLowerCase());
-  return defaultColor ? "000000" : false;
-}
+  // Decide effective theme from mode + color luminance
+  function effectiveIsLight() {
+    if (mode === "light") return true;
+    if (mode === "dark") return false;
+    return colorIsLight;
+  }
 
-function hex2rgb(hexStr) {
-  const hex = validateHex(hexStr);
-  const colorVal = parseInt(hex, 16);
+  function apply() {
+    const isLight = effectiveIsLight();
+    root.setAttribute("data-theme", isLight ? "light" : "dark");
+    onChangeCbs.forEach((cb) => cb(isLight));
+  }
+
+  function setMode(next) {
+    mode = next;
+    try { localStorage.setItem(KEY, mode); } catch {}
+    apply();
+  }
+
+  function init() {
+    try {
+      const saved = localStorage.getItem(KEY);
+      if (saved === "light" || saved === "dark" || saved === "auto") mode = saved;
+    } catch {}
+    if (window.matchMedia) {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+        if (mode === "auto") apply();
+      });
+    }
+    apply();
+  }
+
   return {
-    red: (colorVal >> 16) & 0xff,
-    green: (colorVal >> 8) & 0xff,
-    blue: colorVal & 0xff,
+    init,
+    setMode,
+    getMode: () => mode,
+    cycle: () => setMode(mode === "auto" ? "light" : mode === "light" ? "dark" : "auto"),
+    setColorIsLight: (v) => { colorIsLight = v; if (mode === "auto") apply(); },
+    onChange: (cb) => onChangeCbs.push(cb),
+    effectiveIsLight,
   };
-}
+})();
 
-function rgb2hex(rgb) {
-  const r = Math.round(255 * rgb[0]);
-  const g = Math.round(255 * rgb[1]);
-  const b = Math.round(255 * rgb[2]);
-  return (
-    r.toString(16).padStart(2, "0") +
-    g.toString(16).padStart(2, "0") +
-    b.toString(16).padStart(2, "0")
-  ).toUpperCase();
-}
+// ============================================================
+// Theme tokens
+// ============================================================
+function applyThemeTokens(isLight, colorFull) {
+  const root = document.documentElement;
+  const color = "#" + colorFull;
 
-// Returns [h, s, l] with values 0..1
-function rgb2hsl(rgb) {
-  const [r, g, b] = rgb;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const chroma = max - min;
-  const l = (max + min) / 2;
-  let h = 0, s = 0;
-  if (chroma !== 0) {
-    s = l < 0.5 ? chroma / (max + min) : chroma / (2 - max - min);
-    const delR = ((max - r) / 6 + chroma / 2) / chroma;
-    const delG = ((max - g) / 6 + chroma / 2) / chroma;
-    const delB = ((max - b) / 6 + chroma / 2) / chroma;
-    if (r === max) h = delB - delG;
-    else if (g === max) h = 1 / 3 + delR - delB;
-    else if (b === max) h = 2 / 3 + delG - delR;
-    if (h < 0) h += 1;
-    if (h > 1) h -= 1;
-  }
-  return [h, s, l];
-}
+  root.style.setProperty("--bg", isLight ? color : color);
+  root.style.setProperty("--text", isLight ? "#0f172a" : "#ffffff");
+  root.style.setProperty("--surface", isLight ? "#ffffff" : "#1e293b");
+  root.style.setProperty("--surface-2", isLight ? "#f8fafc" : "#0f172a");
+  root.style.setProperty("--surface-3", isLight ? "#f1f5f9" : "#334155");
+  root.style.setProperty("--text-muted", isLight ? "#64748b" : "#cbd5e1");
+  root.style.setProperty("--border", isLight ? "#e2e8f0" : "#334155");
+  root.style.setProperty("--code-bg", isLight ? "#0f172a" : "#020617");
+  root.style.setProperty("--code-text", "#e2e8f0");
+  root.style.setProperty("--muted", isLight ? "#64748b" : "#cbd5e1");
 
-// Returns [h, s, v] with values 0..1
-function rgb2hsv(rgb) {
-  const [r, g, b] = rgb;
-  const max = Math.max(r, g, b);
-  const min = Math.min(r, g, b);
-  const chroma = max - min;
-  const v = max;
-  let h = 0, s = 0;
-  if (chroma !== 0) {
-    s = chroma / max;
-    const delR = ((max - r) / 6 + chroma / 2) / chroma;
-    const delG = ((max - g) / 6 + chroma / 2) / chroma;
-    const delB = ((max - b) / 6 + chroma / 2) / chroma;
-    if (r === max) h = delB - delG;
-    else if (g === max) h = 1 / 3 + delR - delB;
-    else if (b === max) h = 2 / 3 + delG - delR;
-    if (h < 0) h += 1;
-    if (h > 1) h -= 1;
-  }
-  return [h, s, v];
-}
-
-function rgb2cmy(rgb) {
-  return [1 - rgb[0], 1 - rgb[1], 1 - rgb[2]];
-}
-
-function cmy2cmyk(cmy) {
-  const [c, m, y] = cmy;
-  let k = 1;
-  if (c < k) k = c;
-  if (m < k) k = m;
-  if (y < k) k = y;
-  if (k === 1) return [0, 0, 0, 1];
-  return [(c - k) / (1 - k), (m - k) / (1 - k), (y - k) / (1 - k), k];
-}
-
-function rgb2xyz(rgb) {
-  let [r, g, b] = rgb;
-  r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
-  g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
-  b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
-  r *= 100; g *= 100; b *= 100;
-  return [
-    r * 0.4124 + g * 0.3576 + b * 0.1805,
-    r * 0.2126 + g * 0.7152 + b * 0.0722,
-    r * 0.0193 + g * 0.1192 + b * 0.9505,
-  ];
-}
-
-function xyz2yxy(xyz) {
-  const [x, y, z] = xyz;
-  const sum = x + y + z;
-  const x2 = sum !== 0 ? x / sum : 0;
-  const y2 = sum !== 0 ? y / sum : 0;
-  return [y, x2, y2];
-}
-
-function xyz2hlab(xyz) {
-  const [x, y, z] = xyz;
-  if (y === 0) return [0, 0, 0];
-  const l = 10 * Math.sqrt(y);
-  const a = 17.5 * ((1.02 * x - y) / Math.sqrt(y));
-  const b = 7 * ((y - 0.847 * z) / Math.sqrt(y));
-  return [l, a, b];
-}
-
-function xyz2cielab(xyz) {
-  let [x, y, z] = xyz;
-  x /= 95.047; y /= 100.0; z /= 108.883;
-  x = x > 0.008856 ? Math.cbrt(x) : 7.787 * x + 16 / 116;
-  y = y > 0.008856 ? Math.cbrt(y) : 7.787 * y + 16 / 116;
-  z = z > 0.008856 ? Math.cbrt(z) : 7.787 * z + 16 / 116;
-  return [116 * y - 16, 500 * (x - y), 200 * (y - z)];
-}
-
-function cielab2cielch(lab) {
-  const [l, a, b] = lab;
-  let h = Math.atan2(b, a);
-  if (h > 0) h = (h / Math.PI) * 180;
-  else h = 360 - (Math.abs(h) / Math.PI) * 180;
-  const c = Math.sqrt(a * a + b * b);
-  return [l, c, h];
-}
-
-function xyz2cieluv(xyz) {
-  const [x, y, z] = xyz;
-  const denom = x + 15 * y + 3 * z;
-  const varU = denom !== 0 ? (4 * x) / denom : 0;
-  const varV = denom !== 0 ? (9 * y) / denom : 0;
-  let varY = y / 100;
-  varY = varY > 0.008856 ? Math.cbrt(varY) : 7.787 * varY + 16 / 116;
-  const refX = 95.047, refY = 100.0, refZ = 108.883;
-  const refDenom = refX + 15 * refY + 3 * refZ;
-  const refU = (4 * refX) / refDenom;
-  const refV = (9 * refY) / refDenom;
-  const cieL = 116 * varY - 16;
-  return [cieL, 13 * cieL * (varU - refU), 13 * cieL * (varV - refV)];
-}
-
-function hex2yiq(hexStr) {
-  const rgb = hex2rgb(hexStr);
-  const r = rgb.red / 255, g = rgb.green / 255, b = rgb.blue / 255;
-  return [
-    0.299 * r + 0.587 * g + 0.114 * b,
-    0.596 * r - 0.275 * g - 0.321 * b,
-    0.212 * r - 0.523 * g + 0.311 * b,
-  ];
-}
-
-function hex2websafe(hexStr) {
-  const hex = validateHex(hexStr);
-  const r = Math.round((parseInt(hex.slice(0, 2), 16) / 255) * 5) * 51;
-  const g = Math.round((parseInt(hex.slice(2, 4), 16) / 255) * 5) * 51;
-  const b = Math.round((parseInt(hex.slice(4, 6), 16) / 255) * 5) * 51;
-  return (
-    r.toString(16).padStart(2, "0") +
-    g.toString(16).padStart(2, "0") +
-    b.toString(16).padStart(2, "0")
-  ).toUpperCase();
-}
-
-function hex2inverse(hexStr) {
-  const rgb = hex2rgb(hexStr);
-  return (
-    (255 - rgb.red).toString(16).padStart(2, "0") +
-    (255 - rgb.green).toString(16).padStart(2, "0") +
-    (255 - rgb.blue).toString(16).padStart(2, "0")
-  ).toUpperCase();
-}
-
-function hex2grayscale(hexStr) {
-  const rgb = hex2rgb(hexStr);
-  const gs = Math.floor(0.3 * rgb.red + 0.59 * rgb.green + 0.11 * rgb.blue);
-  const h = gs.toString(16).padStart(2, "0");
-  return (h + h + h).toUpperCase();
-}
-
-// HSL -> RGB, input [h,s,l] 0..1, output [r,g,b] 0..1
-function hsl2rgb(hsl) {
-  const [h, s, l] = hsl;
-  if (s === 0) return [l, l, l];
-  const chroma = (1 - Math.abs(2 * l - 1)) * s;
-  const h_ = h * 6;
-  const x = chroma * (1 - Math.abs((h_ % 2) - 1));
-  const m = l - chroma / 2;
-  let rgb;
-  if (h_ >= 0 && h_ < 1) rgb = [chroma, x, 0];
-  else if (h_ < 2) rgb = [x, chroma, 0];
-  else if (h_ < 3) rgb = [0, chroma, x];
-  else if (h_ < 4) rgb = [0, x, chroma];
-  else if (h_ < 5) rgb = [x, 0, chroma];
-  else rgb = [chroma, 0, x];
-  return [rgb[0] + m, rgb[1] + m, rgb[2] + m];
-}
-
-function hsl2hex(hsl) {
-  return rgb2hex(hsl2rgb(hsl));
-}
-
-function hex2hsl(hexStr) {
-  const rgb = hex2rgb(hexStr);
-  return rgb2hsl([rgb.red / 255, rgb.green / 255, rgb.blue / 255]);
-}
-
-function hex2hsv(hexStr) {
-  const rgb = hex2rgb(hexStr);
-  return rgb2hsv([rgb.red / 255, rgb.green / 255, rgb.blue / 255]);
-}
-
-function hex2cmyk(hexStr) {
-  const rgb = hex2rgb(hexStr);
-  return cmy2cmyk(rgb2cmy([rgb.red / 255, rgb.green / 255, rgb.blue / 255]));
+  // Update the theme-color meta so mobile chrome matches
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", color.toUpperCase());
 }
 
 // ============================================================
-// Color Harmony Schemes
+// applyColor
 // ============================================================
-
-function hex2complementary(hexStr) {
-  const [h, s, l] = hex2hsl(hexStr);
-  let h1 = h + 0.5;
-  if (h > 0.5) h1 = h - 0.5;
-  return hsl2hex([h1, s, l]);
-}
-
-function hex2splitcomplementary(hexStr) {
-  const [h, s, l] = hex2hsl(hexStr);
-  let h1 = h + 150 / 360;
-  if (h1 < 0) h1 += 1; if (h1 > 1) h1 -= 1;
-  let h2 = h + 210 / 360;
-  if (h2 < 0) h2 += 1; if (h2 > 1) h2 -= 1;
-  return [hsl2hex([h1, s, l]), hsl2hex([h2, s, l])];
-}
-
-function hex2triadic(hexStr) {
-  const [h, s, l] = hex2hsl(hexStr);
-  let h1 = h + 120 / 360; if (h1 < 0) h1 += 1; if (h1 > 1) h1 -= 1;
-  let h2 = h + 240 / 360; if (h2 < 0) h2 += 1; if (h2 > 1) h2 -= 1;
-  return [hsl2hex([h1, s, l]), hsl2hex([h2, s, l])];
-}
-
-function hex2tetradic(hexStr, clockwise = true) {
-  const [h, s, l] = hex2hsl(hexStr);
-  const dir = clockwise ? 1 : -1;
-  const offs = [120, 180, 300];
-  return offs.map((deg) => {
-    let hh = h + (dir * deg) / 360;
-    if (hh < 0) hh += 1; if (hh > 1) hh -= 1;
-    return hsl2hex([hh, s, l]);
-  });
-}
-
-function hex2tetradicsqr(hexStr) {
-  const [h, s, l] = hex2hsl(hexStr);
-  return [90, 180, 270].map((deg) => {
-    let hh = h + deg / 360;
-    if (hh < 0) hh += 1; if (hh > 1) hh -= 1;
-    return hsl2hex([hh, s, l]);
-  });
-}
-
-function hex2analagous(hexStr) {
-  const [h, s, l] = hex2hsl(hexStr);
-  let h1 = h - 30 / 360; if (h1 < 0) h1 += 1; if (h1 > 1) h1 -= 1;
-  let h2 = h + 30 / 360; if (h2 < 0) h2 += 1; if (h2 > 1) h2 -= 1;
-  return [hsl2hex([h1, s, l]), hexStr, hsl2hex([h2, s, l])];
-}
-
-// ============================================================
-// Monochromatic variations
-// ============================================================
-
-function getShades(hexStr) {
-  const [h, s, l] = hex2hsl(hexStr);
-  const lDiff = l / 8;
-  const out = [];
-  for (let i = 0; i <= 8; i++) {
-    out.push(hsl2hex([h, s, Math.max(0, l - lDiff * i)]));
-  }
-  return out;
-}
-
-function getTints(hexStr) {
-  const [h, s, l] = hex2hsl(hexStr);
-  const lDiff = (1 - l) / 8;
-  const out = [];
-  for (let i = 0; i <= 8; i++) {
-    out.push(hsl2hex([h, s, Math.min(1, l + lDiff * i)]));
-  }
-  return out;
-}
-
-function getSaturationTones(hexStr, more = true) {
-  const [h, s, l] = hex2hsl(hexStr);
-  const sDiff = more ? (1 - s) / 8 : s / 8;
-  const out = [];
-  for (let i = 0; i <= 8; i++) {
-    const sv = more ? s + sDiff * i : s - sDiff * i;
-    out.push(hsl2hex([h, Math.max(0, Math.min(1, sv)), l]));
-  }
-  return out;
-}
-
-// ============================================================
-// Rendering
-// ============================================================
-
 function applyColor(hex6) {
   const full = expandShortHex(hex6);
   const color = "#" + full;
 
-  const r = parseInt(full.slice(0, 2), 16);
-  const g = parseInt(full.slice(2, 4), 16);
-  const b = parseInt(full.slice(4, 6), 16);
-  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+  const luminance = hexLuminance(full);
+  const colorIsLight = luminance > CONFIG.LUMINANCE_THRESHOLD;
 
-  const isLight = luminance > 0.6;
-
-  // Main theme
-  document.documentElement.style.setProperty("--bg", color);
-  document.documentElement.style.setProperty("--text", isLight ? "#0f172a" : "#ffffff");
-
-  // Surface tokens (cards, panels) — flip with the theme
-  document.documentElement.style.setProperty("--surface", isLight ? "#ffffff" : "#1e293b");
-  document.documentElement.style.setProperty("--surface-2", isLight ? "#f8fafc" : "#0f172a");
-  document.documentElement.style.setProperty("--surface-3", isLight ? "#f1f5f9" : "#334155");
-  document.documentElement.style.setProperty("--text-muted", isLight ? "#64748b" : "#cbd5e1");
-  document.documentElement.style.setProperty("--border", isLight ? "#e2e8f0" : "#334155");
-  document.documentElement.style.setProperty("--code-bg", isLight ? "#0f172a" : "#020617");
-  document.documentElement.style.setProperty("--code-text", "#e2e8f0");
+  Theme.setColorIsLight(colorIsLight);
+  applyThemeTokens(Theme.effectiveIsLight(), full);
 
   const swatch = document.getElementById("preview-swatch");
   const info = document.getElementById("preview-info");
 
   if (swatch) swatch.style.background = color;
-  if (info) info.textContent = `Previewing color: #${full.toUpperCase()}`;
+
+  if (info) {
+    const textOn = readableTextOn(full);
+    info.innerHTML =
+      `<span class="hex-label">#${HEX(full)}</span>` +
+      `<button class="copy-btn" data-copy="${HEX(full)}" aria-label="Copy hex ${HEX(full)}">copy</button>` +
+      `<span class="contrast-hint">text on this bg → <code>${textOn}</code></span>`;
+    attachCopyHandlers(info);
+  }
+
+  // Canonical link + JSON-LD + theme-color
+  const canonical = document.getElementById("canonical-link");
+  if (canonical) canonical.setAttribute("href", `/hex/${full.toLowerCase()}`);
+  updateJSONLD(full);
 
   renderDetails(full);
+  renderOverviewWheel(full);
 }
 
+function updateJSONLD(hex) {
+  const el = document.getElementById("jsonld");
+  if (!el) return;
+  const data = {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name: `#${HEX(hex)} Color Guide`,
+    description: `Color guide for #${HEX(hex)} with conversions, harmony, shades, and CSS.`,
+    about: { "@type": "Thing", "name": `#${HEX(hex)}` },
+    mainEntity: { "@type": "DefinedTerm", "termCode": `#${HEX(hex)}` },
+  };
+  el.textContent = JSON.stringify(data);
+}
+
+// ============================================================
+// Clipboard
+// ============================================================
+function attachCopyHandlers(root) {
+  root.querySelectorAll("[data-copy]").forEach((btn) => {
+    if (btn.dataset.copyBound === "1") return;
+    btn.dataset.copyBound = "1";
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+      const value = btn.getAttribute("data-copy");
+      try {
+        await navigator.clipboard.writeText(value);
+        const original = btn.textContent;
+        btn.textContent = "copied";
+        btn.classList.add("copied");
+        setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove("copied");
+        }, 1200);
+      } catch {
+        window.prompt("Copy value:", value);
+      }
+    });
+  });
+}
+
+// ============================================================
+// Swatch helpers
+// ============================================================
 function swatchItem(hex, label) {
-  const h = hex.toUpperCase();
-  return `<a class="swatch-item" href="/hex/${h.toLowerCase()}" title="#${h}">
+  const h = HEX(hex);
+  return `<a class="swatch-item" href="/hex/${hex.toLowerCase()}" title="#${h}" aria-label="Preview color #${h}">
     <span class="swatch" style="background:#${h}"></span>
     <span class="swatch-label">${label || "#" + h}</span>
   </a>`;
@@ -381,37 +174,135 @@ function swatchRow(hexes) {
   return `<div class="swatch-row">${hexes.map((h) => swatchItem(h)).join("")}</div>`;
 }
 
+function infoCard(hex, label, note) {
+  const h = HEX(hex);
+  return `<article class="info-card">
+    <div class="info-swatch" style="background:#${h}"></div>
+    <div class="info-body">
+      <span class="label">${label}</span>
+      <div class="info-hex">
+        <a href="/hex/${hex.toLowerCase()}">#${h}</a>
+        <button class="copy-btn" data-copy="#${h}" aria-label="Copy hex #${h}">copy</button>
+      </div>
+      ${note ? `<p class="muted">${note}</p>` : ""}
+    </div>
+  </article>`;
+}
+
+function copyChip(value) {
+  return `<button class="copy-btn copy-chip" data-copy="${value}" aria-label="Copy ${value}">copy</button>`;
+}
+
+// ============================================================
+// Overview wheel
+// ============================================================
+function renderOverviewWheel(hex) {
+  const el = document.getElementById("wheel-overview");
+  if (!el) return;
+  const [, s] = hex2hsl(hex);
+  if (s === 0) {
+    el.innerHTML = `<p class="muted">Achromatic color — no hue to plot.</p>`;
+    return;
+  }
+  const comp = hex2complementary(hex);
+  const split = hex2splitcomplementary(hex);
+  const tri = hex2triadic(hex);
+  const tetCW = hex2tetradic(hex, true);
+  const tetSqr = hex2tetradicsqr(hex);
+  const ana = hex2analagous(hex);
+
+  const hexes = [hex, comp, split[0], split[1], tri[0], tri[1], ...tetCW, ...tetSqr, ...ana];
+  const arcs = [
+    [hex, comp],
+    [hex, split[0]], [hex, split[1]],
+    [hex, tri[0]], [hex, tri[1]], [tri[0], tri[1]],
+    [hex, tetCW[1]], [tetCW[0], tetCW[2]],
+    [hex, tetSqr[1]], [tetSqr[0], tetSqr[2]],
+    [ana[0], hex], [hex, ana[2]],
+  ];
+  drawWheel(el, hex, hexes, arcs, { size: 300, showLabels: true });
+}
+
+// ============================================================
+// Detail rendering
+// ============================================================
 function renderDetails(hex) {
-  const rgb = hex2rgb(hex);
-  const hsl = hex2hsl(hex);
-  const hsv = hex2hsv(hex);
-  const cmyk = hex2cmyk(hex);
+  const safe = normalizeColor(hex);
+  if (!safe) return;
+
+  const rgb = hex2rgb(safe);
+  const hsl = hex2hsl(safe);
+  const hsv = hex2hsv(safe);
+  const cmyk = hex2cmyk(safe);
   const xyz = rgb2xyz([rgb.red / 255, rgb.green / 255, rgb.blue / 255]);
   const yxy = xyz2yxy(xyz);
   const hlab = xyz2hlab(xyz);
   const cielab = xyz2cielab(xyz);
   const cielch = cielab2cielch(cielab);
-  const cieluv = hex !== "000000" ? xyz2cieluv(xyz) : null;
-  const yiq = hex2yiq(hex);
+  const cieluv = xyz[1] > CONFIG.CIELUV_MIN_Y ? xyz2cieluv(xyz) : null;
+  const yiq = hex2yiq(safe);
 
   const hue = Math.round(hsl[0] * 360 * 10) / 10;
   const sat = Math.round(hsl[1] * 100 * 10) / 10;
   const light = Math.round(hsl[2] * 100 * 10) / 10;
 
-  const inverse = hex2inverse(hex);
-  const grayscale = hex2grayscale(hex);
-  const websafe = hex2websafe(hex);
-  const complementary = hex2complementary(hex);
-  const split = hex2splitcomplementary(hex);
-  const triadic = hex2triadic(hex);
-  const tetradicCW = hex2tetradic(hex, true);
-  const tetradicCCW = hex2tetradic(hex, false);
-  const tetradicSqr = hex2tetradicsqr(hex);
-  const analogous = hex2analagous(hex);
-  const shades = getShades(hex);
-  const tints = getTints(hex);
-  const moreSat = getSaturationTones(hex, true);
-  const lessSat = getSaturationTones(hex, false);
+  const inverse = hex2inverse(safe);
+  const grayscale = hex2grayscale(safe);
+  const websafe = hex2websafe(safe);
+  const complementary = hex2complementary(safe);
+  const split = hex2splitcomplementary(safe);
+  const triadic = hex2triadic(safe);
+  const tetradicCW = hex2tetradic(safe, true);
+  const tetradicCCW = hex2tetradic(safe, false);
+  const tetradicSqr = hex2tetradicsqr(safe);
+  const analogous = hex2analagous(safe);
+  const shades = getShades(safe);
+  const tints = getTints(safe);
+  const moreSat = getSaturationTones(safe, true);
+  const lessSat = getSaturationTones(safe, false);
+  const verdict = colorVerdict(safe);
+
+  const H = HEX(safe);
+
+  // --- Verdict ---
+  const verdictEl = document.getElementById("verdict");
+  if (verdictEl) {
+    verdictEl.innerHTML = `
+      <h2>Verdict</h2>
+      <div class="verdict-grid">
+        <div class="verdict-card">
+          <span class="label">Accent</span>
+          <strong>${verdict.accent.label}</strong>
+          <p class="muted">${verdict.accent.note}</p>
+        </div>
+        <div class="verdict-card">
+          <span class="label">Body text</span>
+          <strong>${verdict.body.label}</strong>
+          <p class="muted">${verdict.body.note}</p>
+        </div>
+        <div class="verdict-card">
+          <span class="label">Background</span>
+          <strong>${verdict.background.label}</strong>
+          <p class="muted">${verdict.background.note}</p>
+        </div>
+      </div>
+    `;
+  }
+
+  // --- Compare strip ---
+  const compareEl = document.getElementById("compare");
+  if (compareEl) {
+    const textOn = readableTextOn(safe);
+    compareEl.innerHTML = `
+      <h2>Compare</h2>
+      <div class="compare-grid">
+        <div class="compare-tile" style="background:#ffffff;color:#${H}">#${H} on white</div>
+        <div class="compare-tile" style="background:#0f172a;color:#${H}">#${H} on dark</div>
+        <div class="compare-tile" style="background:#${H};color:${textOn}">${textOn} on #${H}</div>
+        <div class="compare-tile" style="background:#${H};color:#${H};border:2px dashed var(--border)">#${H} on itself</div>
+      </div>
+    `;
+  }
 
   // --- Color spaces ---
   const spacesEl = document.getElementById("color-spaces");
@@ -426,7 +317,7 @@ function renderDetails(hex) {
             <span><b>G</b> ${rgb.green}</span>
             <span><b>B</b> ${rgb.blue}</span>
           </div>
-          <p class="muted">rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})</p>
+          <p class="muted">rgb(${rgb.red}, ${rgb.green}, ${rgb.blue}) ${copyChip(`rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`)}</p>
         </div>
         <div class="space-card">
           <h3>HSL</h3>
@@ -435,7 +326,7 @@ function renderDetails(hex) {
             <span><b>S</b> ${sat}%</span>
             <span><b>L</b> ${light}%</span>
           </div>
-          <p class="muted">hsl(${hue}, ${sat}%, ${light}%)</p>
+          <p class="muted">hsl(${hue}, ${sat}%, ${light}%) ${copyChip(`hsl(${hue}, ${sat}%, ${light}%)`)}</p>
         </div>
         <div class="space-card">
           <h3>HSV</h3>
@@ -529,11 +420,12 @@ function renderDetails(hex) {
         <tbody>
           <tr><th>Binary</th><td>${bin(rgb.red)}</td><td>${bin(rgb.green)}</td><td>${bin(rgb.blue)}</td></tr>
           <tr><th>Octal</th><td>${oct(rgb.red)}</td><td>${oct(rgb.green)}</td><td>${oct(rgb.blue)}</td></tr>
-          <tr><th>Decimal</th><td>${dec(rgb.red)}</td><td>${dec(rgb.green)}</td><td>${dec(rgb.blue)}</td></tr>
+          <tr><th>Decimal</th><td>${dec(rgb.red)} ${copyChip(dec(rgb.red))}</td><td>${dec(rgb.green)} ${copyChip(dec(rgb.green))}</td><td>${dec(rgb.blue)} ${copyChip(dec(rgb.blue))}</td></tr>
           <tr><th>Hex</th><td>${hx(rgb.red)}</td><td>${hx(rgb.green)}</td><td>${hx(rgb.blue)}</td></tr>
         </tbody>
       </table>
-      <p class="muted">OLE color (RGB Long): <b>${65536 * rgb.blue + 256 * rgb.green + rgb.red}</b> &middot; Decimal: <b>${65536 * rgb.red + 256 * rgb.green + rgb.blue}</b></p>
+      <p class="muted">OLE (RGB Long): <b>${65536 * rgb.blue + 256 * rgb.green + rgb.red}</b> ${copyChip(String(65536 * rgb.blue + 256 * rgb.green + rgb.red))}
+        &middot; Decimal: <b>${65536 * rgb.red + 256 * rgb.green + rgb.blue}</b> ${copyChip(String(65536 * rgb.red + 256 * rgb.green + rgb.blue))}</p>
     `;
   }
 
@@ -541,132 +433,209 @@ function renderDetails(hex) {
   const harmEl = document.getElementById("harmonies");
   if (harmEl) {
     const schemeAvailable = hsl[1] !== 0;
+    const harmonyDefs = [
+      {
+        id: "complementary", name: "Complementary",
+        rule: "Opposite on the wheel — hue + 180°.",
+        hexes: [safe, complementary], arcs: [[safe, complementary]],
+        labels: ["Base", "Complement"],
+      },
+      {
+        id: "split", name: "Split-Complementary",
+        rule: "Two colors adjacent to the complement — hue ± 150°.",
+        hexes: [split[0], safe, split[1]],
+        arcs: [[safe, split[0]], [safe, split[1]]],
+        labels: ["−150°", "Base", "+150°"],
+      },
+      {
+        id: "triadic", name: "Triadic",
+        rule: "Three colors evenly spaced — hue ± 120°.",
+        hexes: [triadic[0], safe, triadic[1]],
+        arcs: [[safe, triadic[0]], [safe, triadic[1]], [triadic[0], triadic[1]]],
+        labels: ["−120°", "Base", "+120°"],
+      },
+      {
+        id: "tetra-cw", name: "Tetradic (Rectangle) — Clockwise",
+        rule: "Base and hue + 120°, + 180°, + 300°.",
+        hexes: [safe, ...tetradicCW],
+        arcs: [[safe, tetradicCW[1]], [tetradicCW[0], tetradicCW[2]]],
+        labels: ["Base", "+120°", "+180°", "+300°"],
+      },
+      {
+        id: "tetra-ccw", name: "Tetradic (Rectangle) — Counter-clockwise",
+        rule: "Base and hue − 120°, − 180°, − 300°.",
+        hexes: [safe, ...tetradicCCW],
+        arcs: [[safe, tetradicCCW[1]], [tetradicCCW[0], tetradicCCW[2]]],
+        labels: ["Base", "−120°", "−180°", "−300°"],
+      },
+      {
+        id: "tetra-sq", name: "Tetradic (Square)",
+        rule: "Four colors evenly spaced — hue + 90°, + 180°, + 270°.",
+        hexes: [safe, ...tetradicSqr],
+        arcs: [
+          [safe, tetradicSqr[1]],
+          [tetradicSqr[0], tetradicSqr[2]],
+          [safe, tetradicSqr[2]],
+        ],
+        labels: ["Base", "+90°", "+180°", "+270°"],
+      },
+      {
+        id: "analogous", name: "Analogous",
+        rule: "Three neighbors on the wheel — hue ± 30°.",
+        hexes: analogous, arcs: [[analogous[0], safe], [safe, analogous[2]]],
+        labels: ["−30°", "Base", "+30°"],
+      },
+    ];
+
     harmEl.innerHTML = `
       <h2>Color Harmonies</h2>
-      ${!schemeAvailable ? `<p class="muted">No color harmony available for achromatic (grey) colors.</p>` : `
-        <div class="harmony-block">
-          <h3>Complementary</h3>
-          <p class="muted">Opposite on the color wheel (hue + 180°).</p>
-          ${swatchRow([hex, complementary])}
-        </div>
-        <div class="harmony-block">
-          <h3>Split-Complementary</h3>
-          <p class="muted">Two colors adjacent to the complement (hue ± 150°).</p>
-          ${swatchRow([split[0], hex, split[1]])}
-        </div>
-        <div class="harmony-block">
-          <h3>Triadic</h3>
-          <p class="muted">Three colors evenly spaced around the wheel (hue ± 120°).</p>
-          ${swatchRow([triadic[0], hex, triadic[1]])}
-        </div>
-        <div class="harmony-block">
-          <h3>Tetradic (Rectangle) — Clockwise</h3>
-          <p class="muted">Four colors: base, +120°, +180°, +300°.</p>
-          ${swatchRow([hex, ...tetradicCW])}
-        </div>
-        <div class="harmony-block">
-          <h3>Tetradic (Rectangle) — Counter-clockwise</h3>
-          <p class="muted">Four colors: base, −120°, −180°, −300°.</p>
-          ${swatchRow([hex, ...tetradicCCW])}
-        </div>
-        <div class="harmony-block">
-          <h3>Tetradic (Square)</h3>
-          <p class="muted">Four colors evenly spaced (hue + 90°, +180°, +270°).</p>
-          ${swatchRow([hex, ...tetradicSqr])}
-        </div>
-        <div class="harmony-block">
-          <h3>Analogous</h3>
-          <p class="muted">Three colors next to each other (hue ± 30°).</p>
-          ${swatchRow(analogous)}
-        </div>
-      `}
+      ${!schemeAvailable ? `<p class="muted">No color harmony for achromatic (grey) colors.</p>` : ""}
+      ${harmonyDefs.map((def, idx) => `
+        <details class="harmony-block" data-harmony="${def.id}" ${idx === 0 ? "open" : ""}>
+          <summary>
+            <h3>${def.name}</h3>
+            <span class="summary-rule">${def.rule}</span>
+          </summary>
+          <div class="harmony-body">
+            <div class="harmony-meta">
+              ${def.hexes.map((h, i) =>
+                `<span class="item"><span class="chip" style="background:#${HEX(h)}"></span>${def.labels[i] || ""} #${HEX(h)} ${copyChip("#" + HEX(h))}</span>`
+              ).join("")}
+            </div>
+            <div class="harmony-wheel" id="wheel-${def.id}"></div>
+            <div class="swatch-row">${def.hexes.map((h) => swatchItem(h)).join("")}</div>
+          </div>
+        </details>
+      `).join("")}
     `;
+
+    harmonyDefs.forEach((def) => {
+      const detail = harmEl.querySelector(`details[data-harmony="${def.id}"]`);
+      const el = document.getElementById("wheel-" + def.id);
+      if (!detail || !el) return;
+      const paint = () => drawWheel(el, safe, def.hexes, def.arcs, { size: 200 });
+      if (detail.open) { paint(); el.dataset.painted = "1"; }
+      detail.addEventListener("toggle", () => {
+        if (detail.open && !el.dataset.painted) {
+          paint();
+          el.dataset.painted = "1";
+        }
+      });
+    });
   }
 
-  // --- Monochromatic ---
+  // --- Monochromatic (collapsible) ---
   const monoEl = document.getElementById("monochromatic");
   if (monoEl) {
+    const blocks = [
+      { id: "shades", name: "Shades (Darker)", rule: "Black added to a pure hue.", hexes: shades },
+      { id: "tints", name: "Tints (Brighter)", rule: "White mixed into a pure color.", hexes: tints },
+      { id: "more-sat", name: "Tones with More Saturation", rule: "Gray added to a pure hue.", hexes: moreSat },
+      { id: "less-sat", name: "Tones with Less Saturation", rule: "Gray added to a pure hue.", hexes: lessSat },
+    ];
     monoEl.innerHTML = `
       <h2>Monochromatic Variations</h2>
-      <div class="harmony-block">
-        <h3>Shades (Darker)</h3>
-        <p class="muted">A shade is achieved by adding black to a pure hue.</p>
-        ${swatchRow(shades)}
-      </div>
-      <div class="harmony-block">
-        <h3>Tints (Brighter)</h3>
-        <p class="muted">A tint is created by mixing white into a pure color.</p>
-        ${swatchRow(tints)}
-      </div>
-      <div class="harmony-block">
-        <h3>Tones with More Saturation</h3>
-        <p class="muted">A tone is produced by adding gray to a pure hue.</p>
-        ${swatchRow(moreSat)}
-      </div>
-      <div class="harmony-block">
-        <h3>Tones with Less Saturation</h3>
-        <p class="muted">A tone is produced by adding gray to a pure hue.</p>
-        ${swatchRow(lessSat)}
+      ${blocks.map((b) => `
+        <details class="harmony-block">
+          <summary>
+            <h3>${b.name}</h3>
+            <span class="summary-rule">${b.rule}</span>
+          </summary>
+          <div class="harmony-body">
+            ${swatchRow(b.hexes)}
+          </div>
+        </details>
+      `).join("")}
+    `;
+  }
+
+  // --- Alternatives (grouped info cards) ---
+  const altEl = document.getElementById("alternatives");
+  if (altEl) {
+    const websafeNote = websafe === H
+      ? "Already the closest web-safe value."
+      : "Nearest classic web-safe fallback.";
+    altEl.innerHTML = `
+      <h2>Alternatives</h2>
+      <div class="info-grid">
+        ${infoCard(websafe, "Web-safe", websafeNote)}
+        ${infoCard(inverse, "Inverse", "Each RGB channel flipped (255 − v).")}
+        ${infoCard(grayscale, "Grayscale", "Perceptual luma of the original.")}
+        ${infoCard(complementary, "Complementary", "Opposite hue on the color wheel.")}
       </div>
     `;
   }
 
-  // --- Related colors ---
+  // --- Related colors (info cards) ---
   const relEl = document.getElementById("related-colors");
   if (relEl) {
+    const splitMore = hex2splitcomplementary(safe);
+    const tri = hex2triadic(safe);
     relEl.innerHTML = `
       <h2>Related Colors</h2>
-      <div class="swatch-grid">
-        ${swatchItem(hex, "#" + hex.toUpperCase() + " (current)")}
-        ${swatchItem(inverse, "#" + inverse + " (inverse)")}
-        ${swatchItem(grayscale, "#" + grayscale + " (grayscale)")}
-        ${swatchItem(websafe, "#" + websafe + (websafe === hex.toUpperCase() ? " (web-safe)" : " (nearby web-safe)"))}
-        ${swatchItem(complementary, "#" + complementary + " (complementary)")}
+      <div class="info-grid">
+        ${infoCard(safe, "Current", `#${H}`)}
+        ${infoCard(splitMore[0], "Split −150°", "Adjacent to the complement.")}
+        ${infoCard(splitMore[1], "Split +150°", "Adjacent to the complement.")}
+        ${infoCard(tri[0], "Triadic −120°", "Evenly spaced triangle.")}
+        ${infoCard(tri[1], "Triadic +120°", "Evenly spaced triangle.")}
+        ${infoCard(analogous[0], "Analogous −30°", "Neighboring hue.")}
+        ${infoCard(analogous[2], "Analogous +30°", "Neighboring hue.")}
       </div>
     `;
   }
 
-  // --- CSS examples ---
+  // --- CSS examples (as copy cards) ---
   const cssEl = document.getElementById("css-examples");
   if (cssEl) {
-    const H = hex.toUpperCase();
+    const tokens = `:root {\n  --accent: #${H};\n  --accent-dark: #${HEX(shades[2])};\n  --accent-soft: #${HEX(tints[2])};\n}`;
+    const button = `.cta {\n  background: #${H};\n  color: ${readableTextOn(safe)};\n}`;
+    const border = `.outline {\n  border: 2px solid #${H};\n}`;
+    const shadow = `.glow {\n  box-shadow: 0 0 24px #${H};\n}`;
+    const gradient = `.hero {\n  background: linear-gradient(\n    135deg,\n    #${H},\n    #${HEX(tints[2])}\n  );\n}`;
+
+    const cards = [
+      ["Design tokens", tokens],
+      ["Button", button],
+      ["Border", border],
+      ["Glow", shadow],
+      ["Gradient", gradient],
+    ];
+
     cssEl.innerHTML = `
-      <h2>CSS Code Examples</h2>
-      <pre><code>.myforecolor {
-  color: #${H};
-}
-.mybgcolor {
-  background-color: #${H};
-}
-.mybordercolor {
-  border: 3px solid #${H};
-}</code></pre>
-      <h3>Text color</h3>
+      <h2>CSS Examples</h2>
+      <div class="code-grid">
+        ${cards.map(([label, code]) => `
+          <article class="code-card">
+            <div class="code-head">
+              <span class="label">${label}</span>
+              <button class="copy-btn" data-copy="${code.replace(/"/g, "&quot;")}" aria-label="Copy ${label} CSS">copy</button>
+            </div>
+            <pre><code>${code.replace(/</g, "&lt;")}</code></pre>
+          </article>
+        `).join("")}
+      </div>
+      <h3>Live previews</h3>
       <p style="color:#${H}">The quick brown fox jumps over the lazy dog.</p>
-      <h3>Background color</h3>
-      <div style="padding:10px;color:#fff;text-align:center;background-color:#${H}">
-        Background #${H}
-      </div>
-      <h3>Border color</h3>
-      <div style="padding:10px;color:#fff;text-align:center;border:3px solid #${H}">
-        Border #${H}
-      </div>
-      <h3>Text shadow</h3>
-      <p style="text-shadow: 4px 4px 2px #${H};">Text with shadow #${H}</p>
-      <h3>Box shadow</h3>
-      <div style="padding:10px;box-shadow: 1px 1px 3px 2px #${H};">
-        Box with shadow #${H}
-      </div>
+      <div style="padding:10px;color:${readableTextOn(safe)};text-align:center;background-color:#${H}">Background #${H}</div>
+      <div style="padding:10px;color:${readableTextOn(safe)};text-align:center;border:3px solid #${H};margin-top:8px">Border #${H}</div>
+      <p style="text-shadow: 4px 4px 2px #${H};margin-top:8px">Text with shadow #${H}</p>
+      <div style="padding:10px;box-shadow: 1px 1px 3px 2px #${H};margin-top:8px">Box with shadow #${H}</div>
     `;
   }
+
+  // Re-bind copy handlers for all freshly rendered sections
+  ["verdict", "compare", "color-spaces", "base-numbers", "harmonies", "monochromatic", "alternatives", "related-colors", "css-examples"]
+    .forEach((id) => {
+      const el = document.getElementById(id);
+      if (el) attachCopyHandlers(el);
+    });
 }
 
 // ============================================================
-// Routing / Event wiring
+// Routing
 // ============================================================
-
 function readColorFromPath() {
-  // Supports /color/xxxxxx and /hex/xxxxxx
   const match = window.location.pathname.match(/^\/(?:color|hex)\/([0-9a-fA-F#]+)$/);
   if (!match) return null;
   return normalizeColor(match[1]);
@@ -675,7 +644,6 @@ function readColorFromPath() {
 function applyCurrentPathColor() {
   const color = readColorFromPath();
   if (!color) return;
-
   const input = document.getElementById("color-input");
   applyColor(color);
   if (input) input.value = color;
@@ -683,7 +651,6 @@ function applyCurrentPathColor() {
 
 function updateURLAndApply(colorHex) {
   const path = "/hex/" + colorHex;
-
   if (window.history && window.history.pushState) {
     window.history.pushState({ color: colorHex }, "", path);
     applyColor(colorHex);
@@ -692,31 +659,85 @@ function updateURLAndApply(colorHex) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  const form = document.getElementById("color-form");
-  const input = document.getElementById("color-input");
+// Exposed for wheel dots
+function navigateToColor(hex) {
+  updateURLAndApply(hex);
+}
 
-  // On initial load, apply color from URL if present
+// ============================================================
+// Inline form error
+// ============================================================
+function showFormError(message) {
+  const errorEl = document.getElementById("color-error");
+  const input = document.getElementById("color-input");
+  if (errorEl) { errorEl.textContent = message; errorEl.hidden = false; }
+  if (input) { input.setAttribute("aria-invalid", "true"); input.focus(); }
+}
+
+function clearFormError() {
+  const errorEl = document.getElementById("color-error");
+  const input = document.getElementById("color-input");
+  if (errorEl) { errorEl.textContent = ""; errorEl.hidden = true; }
+  if (input) input.removeAttribute("aria-invalid");
+}
+
+// ============================================================
+// Theme toggle button
+// ============================================================
+function renderThemeButton() {
+  const btn = document.getElementById("theme-toggle");
+  if (!btn) return;
+  const mode = Theme.getMode();
+  const labels = { auto: "Auto", light: "Light", dark: "Dark" };
+  const icons = {
+    auto: "◐",
+    light: "☀",
+    dark: "☾",
+  };
+  btn.textContent = `${icons[mode]} ${labels[mode]}`;
+  btn.setAttribute("aria-label", `Theme: ${labels[mode]} (click to cycle)`);
+}
+
+// ============================================================
+// Bootstrap
+// ============================================================
+document.addEventListener("DOMContentLoaded", () => {
+  Theme.init();
+  Theme.onChange((isLight) => {
+    const color = readColorFromPath() || "ffffff";
+    applyThemeTokens(isLight, color);
+  });
+
+  const themeBtn = document.getElementById("theme-toggle");
+  if (themeBtn) {
+    renderThemeButton();
+    themeBtn.addEventListener("click", () => {
+      Theme.cycle();
+      renderThemeButton();
+      const color = readColorFromPath();
+      if (color) applyThemeTokens(Theme.effectiveIsLight(), color);
+    });
+  }
+
   applyCurrentPathColor();
 
+  const form = document.getElementById("color-form");
+  const input = document.getElementById("color-input");
   if (!form || !input) return;
+
+  input.addEventListener("input", clearFormError);
 
   form.addEventListener("submit", (e) => {
     e.preventDefault();
+    clearFormError();
 
-    const raw = input.value;
-    const color = normalizeColor(raw);
-
+    const color = normalizeColor(input.value);
     if (!color) {
-      alert(
-        "Please enter a valid 3 or 6 character hex color (e.g. ff5733 or #ff5733)."
-      );
+      showFormError("Please enter a valid 3 or 6 character hex color (e.g. ff5733 or #ff5733).");
       return;
     }
-
     updateURLAndApply(color);
   });
 
-  // Handle browser back/forward
   window.addEventListener("popstate", applyCurrentPathColor);
 });
