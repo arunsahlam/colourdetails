@@ -7,14 +7,13 @@
   <link rel="stylesheet" href="/style.css" />
 
   <!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-EYJ4WV7T5W"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-EYJ4WV7T5W');
-</script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-EYJ4WV7T5W"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-EYJ4WV7T5W');
+  </script>
 </head>
 <body>
   <main class="container">
@@ -38,6 +37,14 @@
         Enter a color code to see a preview.
       </div>
     </div>
+
+    <!-- Dynamic detail sections populated by app.js -->
+    <section id="color-spaces" class="card"></section>
+    <section id="base-numbers" class="card"></section>
+    <section id="harmonies" class="card"></section>
+    <section id="monochromatic" class="card"></section>
+    <section id="related-colors" class="card"></section>
+    <section id="css-examples" class="card"></section>
   </main>
 
   <script src="/app.js"></script>
