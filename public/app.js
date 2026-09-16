@@ -44,10 +44,25 @@ function readColorFromPath() {
   return normalizeColor(match[1]);
 }
 
-function updateURL(colorHex) {
+function updateURLAndApply(colorHex) {
   const path = "/color/" + colorHex;
+
   if (window.history && window.history.pushState) {
     window.history.pushState({ color: colorHex }, "", path);
+    // Re-apply color after URL change
+    applyColor(colorHex);
+  } else {
+    // Fallback: just reload
+    window.location.href = path;
+  }
+}
+
+function handleLocationChange() {
+  const pathColor = readColorFromPath();
+  if (pathColor) {
+    const input = document.getElementById("color-input");
+    applyColor(pathColor);
+    if (input) input.value = pathColor;
   }
 }
 
@@ -55,12 +70,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("color-form");
   const input = document.getElementById("color-input");
 
-  // Apply color from URL on load (for dynamic URLs like /color/ff5733)
-  const pathColor = readColorFromPath();
-  if (pathColor) {
-    applyColor(pathColor);
-    if (input) input.value = pathColor;
-  }
+  // Apply color from URL on load (for direct links like /color/ff5733)
+  handleLocationChange();
 
   if (!form || !input) return;
 
@@ -72,7 +83,10 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("Please enter a valid 3 or 6 character hex color (e.g. ff5733 or #ff5733).");
       return;
     }
-    applyColor(color);
-    updateURL(color);
+    // Update URL and apply color in one go
+    updateURLAndApply(color);
   });
+
+  // Handle browser back/forward navigation
+  window.addEventListener("popstate", handleLocationChange);
 });
