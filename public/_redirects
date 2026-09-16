@@ -1,10 +1,2 @@
-# Serve index.html for SPA routes, but not for real assets
+# Fallback for SPA routes (no wildcards)
 /* /index.html 200
-/styles.css /styles.css 200
-/app.js /app.js 200
-/*.css /*.css 200
-/*.js /*.js 200
-/*.png /*.png 200
-/*.jpg /*.jpg 200
-/*.svg /*.svg 200
-/*.ico /*.ico 200
