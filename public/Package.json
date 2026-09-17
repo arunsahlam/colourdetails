@@ -1,0 +1,9 @@
+{
+  "scripts": {
+    "build":         "npm run build:colors && npm run build:pages",
+    "build:colors":  "node scripts/build-colors.js",
+    "build:pages":   "node scripts/build-pages.js",
+    "watch":         "node scripts/build-pages.js --watch",
+    "serve":         "python3 -m http.server 3000"
+  }
+}

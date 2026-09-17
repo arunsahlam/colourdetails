@@ -1,0 +1,160 @@
+<!--
+  GENERATED FILE — do not edit directly.
+  Source:    _pages/blender.html
+  Rebuild:   node scripts/build-pages.js
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Color Blender — Mix Two Hex Colors</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Blend two hex colors. See the mixed color, the interpolation ramp, and copy-ready values." />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="icon" href="/logo.png" type="image/png" />
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body data-page="blender">
+  <header class="site-header">
+  <nav class="site-nav" aria-label="Primary">
+    <a class="site-brand" href="/index.html">
+      <img class="brand-logo" src="/logo.svg" alt="" width="28" height="28" />
+      <span class="brand-text">Colour Details</span>
+    </a>
+
+    <ul class="site-links">
+      <li><a href="/index.html"     data-nav="home">Home</a></li>
+      <li><a href="/colors.html"    data-nav="colors">Named Colors</a></li>
+      <li><a href="/websafe.html"   data-nav="websafe">Web-safe</a></li>
+      <li><a href="/blender.html"   data-nav="blender">Blender</a></li>
+      <li><a href="/gradient.html"  data-nav="gradient">Gradient</a></li>
+      <li><a href="/subtract.html"  data-nav="subtract">Subtract</a></li>
+      <li><a href="/blindness.html" data-nav="cvd">CVD</a></li>
+    </ul>
+    <button id="theme-toggle" class="theme-btn" type="button"
+            aria-label="Cycle theme">◐ Auto</button>
+  </nav>
+  <div class="site-search-row">
+    <form id="nav-color-form" class="nav-search" role="search" novalidate>
+      <label for="nav-color-input" class="visually-hidden">
+        Enter a color code (hex)
+      </label>
+      <input
+        id="nav-color-input"
+        type="text"
+        placeholder="#beff00"
+        autocomplete="off"
+        autocapitalize="off"
+        autocorrect="off"
+        spellcheck="false"
+        inputmode="text"
+        maxlength="7"
+        aria-label="Enter a color code (hex)"
+      />
+      <button type="submit" aria-label="Preview color">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+      </button>
+    </form>
+  </div>
+</header>
+  <main class="container">
+    <form id="blend-form" class="card">
+      <div class="blend-row">
+        <label>
+          Color A
+          <input id="blend-a" type="text" value="ff0000" maxlength="7" />
+        </label>
+        <label>
+          Color B
+          <input id="blend-b" type="text" value="0000ff" maxlength="7" />
+        </label>
+        <label>
+          Mix <span id="mix-label">50%</span>
+          <input id="mix" type="range" min="0" max="100" value="50" />
+        </label>
+      </div>
+    </form>
+
+    <section class="card" id="blend-result">
+      <h2>Result</h2>
+      <div id="blend-swatch" class="preview-swatch" style="height:120px"></div>
+      <div id="blend-info" class="preview-info" aria-live="polite"></div>
+    </section>
+
+    <section class="card" id="blend-ramp">
+      <h2>Interpolation ramp</h2>
+      <div id="ramp" class="ramp"></div>
+      <div id="ramp-values" class="ramp-values"></div>
+    </section>
+  </main>
+  <footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="muted">
+      Color Guide — hex values, harmonies, variations, contrast, and conversions.
+      Built for designers and developers.
+    </p>
+    <nav class="site-footer-nav" aria-label="Footer">
+      <a href="/index.html">Home</a>
+      <a href="/colors.html">Named Colors</a>
+      <a href="/websafe.html">Web-safe</a>
+      <a href="/blender.html">Blender</a>
+      <a href="/gradient.html">Gradient</a>
+      <a href="/subtract.html">Subtract</a>
+      <a href="/blindness.html">CVD</a>
+    </nav>
+  </div>
+</footer>
+
+  <script src="/color.js"></script>
+  <script src="/nav.js"></script>
+  <script>
+    const els = {
+      a: document.getElementById("blend-a"),
+      b: document.getElementById("blend-b"),
+      mix: document.getElementById("mix"),
+      mixLabel: document.getElementById("mix-label"),
+      swatch: document.getElementById("blend-swatch"),
+      info: document.getElementById("blend-info"),
+      ramp: document.getElementById("ramp"),
+      rampValues: document.getElementById("ramp-values"),
+    };
+
+    function render() {
+      const a = validateHex(els.a.value, true);
+      const b = validateHex(els.b.value, true);
+      const t = Number(els.mix.value) / 100;
+      els.mixLabel.textContent = els.mix.value + "%";
+
+      const mixed = mixColors(a, b, t);
+      els.swatch.style.background = "#" + mixed;
+      const rgb = hex2rgb(mixed);
+      els.info.innerHTML =
+        `<span class="hex-label">#${mixed}</span>` +
+        `<span class="muted">rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})</span>`;
+
+      const stops = buildGradient(a, b, 11);
+      els.ramp.innerHTML = stops
+        .map((hx) => `<span class="ramp-stop" style="background:#${hx}" title="#${hx}"></span>`)
+        .join("");
+      els.rampValues.innerHTML = stops
+        .map((hx) => `<span>#${hx}</span>`)
+        .join("");
+    }
+
+    ["input", "change"].forEach((ev) => {
+      els.a.addEventListener(ev, render);
+      els.b.addEventListener(ev, render);
+      els.mix.addEventListener(ev, render);
+    });
+    render();
+  </script>
+</body>
+</html>

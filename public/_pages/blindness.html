@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Color Blindness Simulator — 8 Variants</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="See any hex color as it appears with 8 color vision deficiency variants: achromatopsia, protanopia, deuteranopia, tritanopia, and anomalous trichromacy." />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="icon" href="/logo.png" type="image/png" />
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body data-page="blindness">
+  <!-- @include header -->
+  <main class="container">
+    <form id="cvd-form" class="card">
+      <label for="cvd-hex">Color</label>
+      <input id="cvd-hex" type="text" value="beff00" maxlength="7" />
+    </form>
+
+    <section class="card">
+      <h2>Simulated views</h2>
+      <div id="cvd-grid"></div>
+    </section>
+
+    <section class="card">
+      <h2>Sample UI</h2>
+      <p class="muted">The same accent used as a button, with text chosen for contrast in each variant.</p>
+      <div id="cvd-ui"></div>
+    </section>
+  </main>
+  <!-- @include footer -->
+  <script src="/color.js"></script>
+  <script src="/nav.js"></script>
+  <script>
+    const els = {
+      hex: document.getElementById("cvd-hex"),
+      grid: document.getElementById("cvd-grid"),
+      ui: document.getElementById("cvd-ui"),
+    };
+
+    function render() {
+      const base = validateHex(els.hex.value, true);
+      const groups = {};
+      for (const v of CVD_VARIANTS) {
+        (groups[v.group] = groups[v.group] || []).push(v);
+      }
+
+      els.grid.innerHTML = Object.entries(groups)
+        .map(([group, variants]) => `
+          <div class="cvd-group">
+            <h3>${group}</h3>
+            <div class="cvd-row">
+              ${variants.map((v) => {
+                const sim = v.id === "normal" ? HEX(base) : simulateCVD(base, v.id);
+                return `
+                  <article class="cvd-card">
+                    <div class="cvd-swatch" style="background:#${sim}"></div>
+                    <div class="cvd-body">
+                      <strong>${v.label}</strong>
+                      <code>#${sim}</code>
+                      <button class="copy-btn" data-copy="#${sim}">copy</button>
+                    </div>
+                  </article>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `)
+        .join("");
+
+      // Sample UI for each variant
+      els.ui.innerHTML = Object.entries(groups)
+        .map(([group, variants]) => `
+          <div class="cvd-group">
+            <h3>${group}</h3>
+            <div class="cvd-row">
+              ${variants.map((v) => {
+                const sim = v.id === "normal" ? HEX(base) : simulateCVD(base, v.id);
+                const textOn = readableTextOn(sim);
+                return `
+                  <article class="cvd-card">
+                    <div class="cvd-ui-preview" style="background:#${sim};color:${textOn}">
+                      <span>Preview button</span>
+                    </div>
+                    <div class="cvd-body"><strong>${v.label}</strong></div>
+                  </article>
+                `;
+              }).join("")}
+            </div>
+          </div>
+        `)
+        .join("");
+
+      attachCopy();
+    }
+
+    function attachCopy() {
+      document.querySelectorAll("[data-copy]").forEach((btn) => {
+        if (btn.dataset.bound === "1") return;
+        btn.dataset.bound = "1";
+        btn.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(btn.getAttribute("data-copy"));
+            btn.textContent = "copied";
+            setTimeout(() => (btn.textContent = "copy"), 1200);
+          } catch {}
+        });
+      });
+    }
+
+    els.hex.addEventListener("input", render);
+    render();
+  </script>
+</body>
+</html>

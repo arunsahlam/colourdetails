@@ -63,57 +63,45 @@ const Theme = (() => {
 // ============================================================
 // Theme tokens
 // ============================================================
-function applyThemeTokens(isLight, colorFull) {
-  const root = document.documentElement;
-  const color = "#" + colorFull;
-
-  root.style.setProperty("--bg", isLight ? color : color);
-  root.style.setProperty("--text", isLight ? "#0f172a" : "#ffffff");
-  root.style.setProperty("--surface", isLight ? "#ffffff" : "#1e293b");
-  root.style.setProperty("--surface-2", isLight ? "#f8fafc" : "#0f172a");
-  root.style.setProperty("--surface-3", isLight ? "#f1f5f9" : "#334155");
-  root.style.setProperty("--text-muted", isLight ? "#64748b" : "#cbd5e1");
-  root.style.setProperty("--border", isLight ? "#e2e8f0" : "#334155");
-  root.style.setProperty("--code-bg", isLight ? "#0f172a" : "#020617");
-  root.style.setProperty("--code-text", "#e2e8f0");
-  root.style.setProperty("--muted", isLight ? "#64748b" : "#cbd5e1");
-
-  // Update the theme-color meta so mobile chrome matches
+function applyThemeTokens() {
+  // Only the theme-color meta follows the selected color — it's the
+  // browser chrome on mobile, not page content.
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute("content", color.toUpperCase());
+  if (meta) {
+    const color = readColorFromPath() || "ffffff";
+    meta.setAttribute("content", "#" + color.toUpperCase());
+  }
 }
 
 // ============================================================
 // applyColor
 // ============================================================
 function applyColor(hex6) {
+  showDetails();
+
   const full = expandShortHex(hex6);
   const color = "#" + full;
 
-  const luminance = hexLuminance(full);
-  const colorIsLight = luminance > CONFIG.LUMINANCE_THRESHOLD;
-
-  Theme.setColorIsLight(colorIsLight);
-  applyThemeTokens(Theme.effectiveIsLight(), full);
-
   const swatch = document.getElementById("preview-swatch");
-  const info = document.getElementById("preview-info");
-
   if (swatch) swatch.style.background = color;
 
+  const info = document.getElementById("preview-info");
   if (info) {
     const textOn = readableTextOn(full);
     info.innerHTML =
       `<span class="hex-label">#${HEX(full)}</span>` +
-      `<button class="copy-btn" data-copy="${HEX(full)}" aria-label="Copy hex ${HEX(full)}">copy</button>` +
+      `<button class="copy-btn" data-copy="${HEX(full)}">copy</button>` +
       `<span class="contrast-hint">text on this bg → <code>${textOn}</code></span>`;
     attachCopyHandlers(info);
   }
 
-  // Canonical link + JSON-LD + theme-color
   const canonical = document.getElementById("canonical-link");
   if (canonical) canonical.setAttribute("href", `/hex/${full.toLowerCase()}`);
   updateJSONLD(full);
+
+  // Theme-color meta only
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.setAttribute("content", color.toUpperCase());
 
   renderDetails(full);
   renderOverviewWheel(full);
@@ -174,6 +162,27 @@ function swatchRow(hexes) {
   return `<div class="swatch-row">${hexes.map((h) => swatchItem(h)).join("")}</div>`;
 }
 
+function swatchStrip(hexes) {
+  const cells = hexes.map((h) => {
+    const H = HEX(h);
+    return `<a class="swatch-item" href="/hex/${h.toLowerCase()}"
+              title="#${H}" aria-label="Preview color #${H}">
+      <span class="swatch" style="background:#${H}"></span>
+    </a>`;
+  }).join("");
+
+  const codes = hexes.map((h) => `<span>#${HEX(h)}</span>`).join("");
+
+  return `
+    <div class="swatch-strip" style="grid-template-columns: repeat(${hexes.length}, 1fr)">
+      ${cells}
+    </div>
+    <div class="swatch-strip-codes" style="grid-template-columns: repeat(${hexes.length}, 1fr)">
+      ${codes}
+    </div>
+  `;
+}
+
 function infoCard(hex, label, note) {
   const h = HEX(hex);
   return `<article class="info-card">
@@ -191,6 +200,172 @@ function infoCard(hex, label, note) {
 
 function copyChip(value) {
   return `<button class="copy-btn copy-chip" data-copy="${value}" aria-label="Copy ${value}">copy</button>`;
+}
+
+// Show 4 neighbors from the named-colors index with hues within ±20°
+// Find up to `count` named colors whose hue is within `windowDeg`
+// of the given hex's hue, sorted by closest hue. Skips greys and
+// near-greys (they have unstable hues) and the input color itself.
+function nearbyNamedColors(hex, all, count = 5, windowDeg = 20) {
+  if (!Array.isArray(all) || all.length === 0) return [];
+
+  const H = HEX(hex);
+  const [baseH, baseS] = hex2hsl(hex);
+
+  // If the base is grey, hue is meaningless — bail.
+  if (baseS < 0.05) return [];
+
+  const windowN = windowDeg / 360;
+
+  return all
+    .filter((c) => c.hex !== H)
+    .map((c) => {
+      const [ch, cs] = hex2hsl(c.hex);
+      // Skip greys — their hue is meaningless.
+      if (cs < 0.1) return null;
+      let dh = Math.abs(ch - baseH);
+      if (dh > 0.5) dh = 1 - dh;
+      return { hex: c.hex, names: c.names, dh };
+    })
+    .filter((c) => c && c.dh <= windowN)
+    .sort((a, b) => a.dh - b.dh)
+    .slice(0, count);
+}
+
+function renderContrast(hex) {
+  const el = document.getElementById("contrast");
+  if (!el) return;
+
+  const H = HEX(hex);
+  const report = contrastReport(hex);
+  const { whiteRatio, blackRatio, whiteLevels, blackLevels, whiteWins, suggestion } = report;
+
+  const fmt = (r) => r.toFixed(2) + ":1";
+
+  const badge = (pass, label) =>
+    `<span class="wcag-badge ${pass ? "pass" : "fail"}">${label}: ${pass ? "✔ Pass" : "✖ Fail"}</span>`;
+
+  const row = (label, ratio, levels, tone) => `
+    <div class="wcag-row" style="background:#${H};color:${tone}">
+      <span class="wcag-swatch-label">${label}</span>
+      <span class="wcag-ratio">${fmt(ratio)}</span>
+      <span class="wcag-badges">
+        ${badge(levels.aaNormal, "AA normal")}
+        ${badge(levels.aaLarge, "AA large")}
+        ${badge(levels.aaaNormal, "AAA normal")}
+        ${badge(levels.aaaLarge, "AAA large")}
+      </span>
+    </div>
+  `;
+
+  const bestSentence = whiteWins
+    ? `White text has the stronger contrast at ${fmt(whiteRatio)}.`
+    : `Black text has the stronger contrast at ${fmt(blackRatio)}.`;
+
+  const suggestionHTML = suggestion
+    ? `
+      <p class="muted">
+        Neither pure white nor pure black reaches AAA for normal text on #${H}.
+        Try the
+        <a href="/hex/${suggestion.hex.toLowerCase()}">#${suggestion.hex}</a>
+        (${suggestion.step}) instead — it reaches ${suggestion.ratio.toFixed(2)}:1,
+        which passes AAA normal.
+      </p>
+    `
+    : "";
+
+  // ---- Nearby colors ----
+  const all = window.COLOR_NAMES_DATA || [];
+  const nearby = nearbyNamedColors(hex, all, 5, 20);
+
+  const nearbyHTML = nearby.length
+    ? `
+      <h3 class="nearby-heading">Nearby colors</h3>
+      <div class="nearby-pills">
+        ${nearby.map((c) => {
+          const name = c.names[0]?.name || "Unnamed";
+          const HH = HEX(c.hex);
+          return `
+            <a class="nearby-pill" href="/hex/${c.hex.toLowerCase()}"
+               title="${name} — #${HH}">
+              <span class="nearby-swatch" style="background:#${HH}"></span>
+              <span class="nearby-label">
+                <strong>#${HH}</strong>
+                <em>${name}</em>
+              </span>
+            </a>
+          `;
+        }).join("")}
+      </div>
+    `
+    : "";
+
+  el.innerHTML = `
+    <h2>WCAG Contrast</h2>
+    <p class="muted">
+      Contrast ratios for text placed on a #${H} background.
+      WCAG requires <strong>4.5:1</strong> for normal text (AA),
+      <strong>3:1</strong> for large text (AA), and
+      <strong>7:1</strong> for normal text (AAA).
+    </p>
+    <div class="wcag-grid">
+      ${row("White text", whiteRatio, whiteLevels, "#ffffff")}
+      ${row("Black text", blackRatio, blackLevels, "#000000")}
+    </div>
+    <p class="muted">${bestSentence}</p>
+    ${suggestionHTML}
+    ${nearbyHTML}
+  `;
+}
+
+// ------------------------------------------------------------
+// Known color names (from colors.json via window.COLOR_NAMES_DATA)
+// ------------------------------------------------------------
+function renderColorNames(hex) {
+  const el = document.getElementById("color-names");
+  if (!el) return;
+
+  const H = HEX(hex);
+  const all = window.COLOR_NAMES_DATA || [];
+  const entry = all.find((c) => c.hex === H);
+
+  if (!entry || !entry.names.length) {
+    el.innerHTML = `
+      <h2>Known names</h2>
+      <p class="muted">No commonly-used name is registered for #${H}.</p>
+    `;
+    return;
+  }
+
+  const pills = entry.names
+    .map(
+      (n) =>
+        `<span class="name-pill" title="Source: ${escapeHtml(n.source)}">
+          ${escapeHtml(n.name)}
+          <em>${escapeHtml(n.source)}</em>
+        </span>`
+    )
+    .join("");
+
+  el.innerHTML = `
+  <h2>Known names</h2>
+  <dl class="name-list">
+    ${entry.names.map(n => `
+      <dt>${escapeHtml(n.name)}</dt>
+      <dd>${escapeHtml(n.source)}</dd>
+    `).join("")}
+  </dl>
+  <p class="muted">${entry.names.length} name${entry.names.length === 1 ? "" : "s"} in the <a href="/colors.html">named colors index</a>.</p>
+`;
+}
+
+// Tiny inline escaper (nothing in colors.json is user input, but be safe)
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 // ============================================================
@@ -221,6 +396,40 @@ function renderOverviewWheel(hex) {
     [ana[0], hex], [hex, ana[2]],
   ];
   drawWheel(el, hex, hexes, arcs, { size: 300, showLabels: true });
+}
+
+function renderInlineCVD(hex) {
+  const el = document.getElementById("cvd-inline-grid");
+  const hexLabel = document.getElementById("cvd-inline-hex");
+  if (!el) return;
+
+  const H = HEX(hex);
+  if (hexLabel) hexLabel.textContent = H;
+
+  const groups = {};
+  for (const v of CVD_VARIANTS) {
+    (groups[v.group] = groups[v.group] || []).push(v);
+  }
+
+  el.innerHTML = Object.entries(groups).map(([group, variants]) => `
+    <div class="cvd-group">
+      <h4>${group}</h4>
+      <div class="cvd-row">
+        ${variants.map((v) => {
+          const sim = v.id === "normal" ? H : simulateCVD(hex, v.id);
+          return `
+            <article class="cvd-card">
+              <div class="cvd-swatch" style="background:#${sim}"></div>
+              <div class="cvd-body">
+                <strong>${v.label}</strong>
+                <code>#${sim}</code>
+              </div>
+            </article>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `).join("");
 }
 
 // ============================================================
@@ -304,11 +513,27 @@ function renderDetails(hex) {
     `;
   }
 
-  // --- Color spaces ---
+    // --- Color spaces ---
   const spacesEl = document.getElementById("color-spaces");
   if (spacesEl) {
+    const rgbPct = rgbPercent(safe);
+    const cmykPct = cmykPercent(safe);
+
+    const wsNote = websafe === H
+      ? `#${H} is already a web-safe color.`
+      : `Web safe color of #${H} is #${websafe}.`;
+
     spacesEl.innerHTML = `
       <h2>Color Spaces</h2>
+
+      <p class="callout">
+        <strong>Web-safe fallback:</strong>
+        ${websafe === H
+          ? `#${H} is already web-safe.`
+          : `<a href="/hex/${websafe.toLowerCase()}">#${websafe}</a> ${copyChip("#" + websafe)}`}
+        <span class="muted"> — closest color from the 216-color legacy palette.</span>
+      </p>
+
       <div class="space-grid">
         <div class="space-card">
           <h3>RGB</h3>
@@ -318,7 +543,13 @@ function renderDetails(hex) {
             <span><b>B</b> ${rgb.blue}</span>
           </div>
           <p class="muted">rgb(${rgb.red}, ${rgb.green}, ${rgb.blue}) ${copyChip(`rgb(${rgb.red}, ${rgb.green}, ${rgb.blue})`)}</p>
+          <div class="pct-bar" role="img" aria-label="RGB percentages">
+            <div class="pct-seg" style="background:#dc2626;flex:${rgbPct[0] || 0.001}">${rgbPct[0].toFixed(1)}%</div>
+            <div class="pct-seg" style="background:#16a34a;flex:${rgbPct[1] || 0.001}">${rgbPct[1].toFixed(1)}%</div>
+            <div class="pct-seg" style="background:#2563eb;flex:${rgbPct[2] || 0.001}">${rgbPct[2].toFixed(1)}%</div>
+          </div>
         </div>
+
         <div class="space-card">
           <h3>HSL</h3>
           <div class="space-values">
@@ -328,6 +559,7 @@ function renderDetails(hex) {
           </div>
           <p class="muted">hsl(${hue}, ${sat}%, ${light}%) ${copyChip(`hsl(${hue}, ${sat}%, ${light}%)`)}</p>
         </div>
+
         <div class="space-card">
           <h3>HSV</h3>
           <div class="space-values">
@@ -336,6 +568,7 @@ function renderDetails(hex) {
             <span><b>V</b> ${Math.round(hsv[2] * 10000) / 100}%</span>
           </div>
         </div>
+
         <div class="space-card">
           <h3>CMYK</h3>
           <div class="space-values">
@@ -344,6 +577,7 @@ function renderDetails(hex) {
             <span><b>Y</b> ${Math.round(cmyk[2] * 10000) / 100}%</span>
             <span><b>K</b> ${Math.round(cmyk[3] * 10000) / 100}%</span>
           </div>
+          <p class="muted">Percentages: ${cmykPct.map((v) => v.toFixed(0) + "%").join(" / ")}</p>
         </div>
         <div class="space-card">
           <h3>CIE XYZ</h3>
@@ -437,12 +671,14 @@ function renderDetails(hex) {
       {
         id: "complementary", name: "Complementary",
         rule: "Opposite on the wheel — hue + 180°.",
+        description: DESCRIPTIONS.complementary,
         hexes: [safe, complementary], arcs: [[safe, complementary]],
         labels: ["Base", "Complement"],
       },
       {
         id: "split", name: "Split-Complementary",
         rule: "Two colors adjacent to the complement — hue ± 150°.",
+        description: DESCRIPTIONS.splitComplement,
         hexes: [split[0], safe, split[1]],
         arcs: [[safe, split[0]], [safe, split[1]]],
         labels: ["−150°", "Base", "+150°"],
@@ -450,6 +686,7 @@ function renderDetails(hex) {
       {
         id: "triadic", name: "Triadic",
         rule: "Three colors evenly spaced — hue ± 120°.",
+        description: DESCRIPTIONS.triad,
         hexes: [triadic[0], safe, triadic[1]],
         arcs: [[safe, triadic[0]], [safe, triadic[1]], [triadic[0], triadic[1]]],
         labels: ["−120°", "Base", "+120°"],
@@ -457,6 +694,7 @@ function renderDetails(hex) {
       {
         id: "tetra-cw", name: "Tetradic (Rectangle) — Clockwise",
         rule: "Base and hue + 120°, + 180°, + 300°.",
+        description: DESCRIPTIONS.tetrad,
         hexes: [safe, ...tetradicCW],
         arcs: [[safe, tetradicCW[1]], [tetradicCW[0], tetradicCW[2]]],
         labels: ["Base", "+120°", "+180°", "+300°"],
@@ -482,6 +720,7 @@ function renderDetails(hex) {
       {
         id: "analogous", name: "Analogous",
         rule: "Three neighbors on the wheel — hue ± 30°.",
+        description: DESCRIPTIONS.analogous,
         hexes: analogous, arcs: [[analogous[0], safe], [safe, analogous[2]]],
         labels: ["−30°", "Base", "+30°"],
       },
@@ -491,16 +730,21 @@ function renderDetails(hex) {
       <h2>Color Harmonies</h2>
       ${!schemeAvailable ? `<p class="muted">No color harmony for achromatic (grey) colors.</p>` : ""}
       ${harmonyDefs.map((def, idx) => `
-        <details class="harmony-block" data-harmony="${def.id}" ${idx === 0 ? "open" : ""}>
+        <details class="harmony-block" data-harmony="${def.id}" style="border-left-color:#${HEX(def.hexes[0])}" open>
           <summary>
+            <span class="harmony-index">${idx + 1}</span>
             <h3>${def.name}</h3>
             <span class="summary-rule">${def.rule}</span>
           </summary>
           <div class="harmony-body">
+            <p class="muted harmony-desc">${def.description}</p>
             <div class="harmony-meta">
               ${def.hexes.map((h, i) =>
                 `<span class="item"><span class="chip" style="background:#${HEX(h)}"></span>${def.labels[i] || ""} #${HEX(h)} ${copyChip("#" + HEX(h))}</span>`
               ).join("")}
+            </div>
+            <div class="harmony-values muted">
+              ${def.hexes.map((hx) => `#${HEX(hx)}`).join(" | ")}
             </div>
             <div class="harmony-wheel" id="wheel-${def.id}"></div>
             <div class="swatch-row">${def.hexes.map((h) => swatchItem(h)).join("")}</div>
@@ -510,42 +754,47 @@ function renderDetails(hex) {
     `;
 
     harmonyDefs.forEach((def) => {
-      const detail = harmEl.querySelector(`details[data-harmony="${def.id}"]`);
       const el = document.getElementById("wheel-" + def.id);
-      if (!detail || !el) return;
-      const paint = () => drawWheel(el, safe, def.hexes, def.arcs, { size: 200 });
-      if (detail.open) { paint(); el.dataset.painted = "1"; }
-      detail.addEventListener("toggle", () => {
-        if (detail.open && !el.dataset.painted) {
-          paint();
-          el.dataset.painted = "1";
-        }
-      });
+      if (!el) return;
+      drawWheel(el, safe, def.hexes, def.arcs, { size: 200 });
     });
   }
 
-  // --- Monochromatic (collapsible) ---
+  // --- Monochromatic ---
   const monoEl = document.getElementById("monochromatic");
   if (monoEl) {
+    const shadeRamp = shadeSteps(safe);
+    const tintRamp  = tintSteps(safe);
+    const moreRamp  = moreSaturationSteps(safe);
+    const lessRamp  = lessSaturationSteps(safe);
+
     const blocks = [
-      { id: "shades", name: "Shades (Darker)", rule: "Black added to a pure hue.", hexes: shades },
-      { id: "tints", name: "Tints (Brighter)", rule: "White mixed into a pure color.", hexes: tints },
-      { id: "more-sat", name: "Tones with More Saturation", rule: "Gray added to a pure hue.", hexes: moreSat },
-      { id: "less-sat", name: "Tones with Less Saturation", rule: "Gray added to a pure hue.", hexes: lessSat },
+      {
+        title: "Shades",
+        description: `Each step blends #${H} toward black using <code>new = old × (1 − factor)</code>.`,
+        ramp: shadeRamp,
+      },
+      {
+        title: "Tints",
+        description: `Each step blends #${H} toward white using <code>new = old + (255 − old) × factor</code>.`,
+        ramp: tintRamp,
+      },
+      {
+        title: "More Saturation",
+        description: "Shifts saturation toward fully saturated at the same hue and lightness.",
+        ramp: moreRamp,
+      },
+      {
+        title: "Less Saturation",
+        description: "Shifts saturation toward grey at the same hue and lightness.",
+        ramp: lessRamp,
+      },
     ];
+
     monoEl.innerHTML = `
       <h2>Monochromatic Variations</h2>
-      ${blocks.map((b) => `
-        <details class="harmony-block">
-          <summary>
-            <h3>${b.name}</h3>
-            <span class="summary-rule">${b.rule}</span>
-          </summary>
-          <div class="harmony-body">
-            ${swatchRow(b.hexes)}
-          </div>
-        </details>
-      `).join("")}
+      <p class="muted">${DESCRIPTIONS.monochromatic}</p>
+      ${blocks.map(rampSection).join("")}
     `;
   }
 
@@ -585,47 +834,195 @@ function renderDetails(hex) {
     `;
   }
 
-  // --- CSS examples (as copy cards) ---
+  // --- CSS examples (paired code + live preview) ---
   const cssEl = document.getElementById("css-examples");
   if (cssEl) {
-    const tokens = `:root {\n  --accent: #${H};\n  --accent-dark: #${HEX(shades[2])};\n  --accent-soft: #${HEX(tints[2])};\n}`;
-    const button = `.cta {\n  background: #${H};\n  color: ${readableTextOn(safe)};\n}`;
-    const border = `.outline {\n  border: 2px solid #${H};\n}`;
-    const shadow = `.glow {\n  box-shadow: 0 0 24px #${H};\n}`;
-    const gradient = `.hero {\n  background: linear-gradient(\n    135deg,\n    #${H},\n    #${HEX(tints[2])}\n  );\n}`;
+    const H = HEX(safe);
+    const textOn = readableTextOn(safe);
+    const dark = "#" + HEX(shades[2]);
+    const soft = "#" + HEX(tints[2]);
+    const rgb = hex2rgb(safe);
 
-    const cards = [
-      ["Design tokens", tokens],
-      ["Button", button],
-      ["Border", border],
-      ["Glow", shadow],
-      ["Gradient", gradient],
+    const examples = [
+      {
+        label: "Design tokens",
+        code: `:root {
+  --accent: #${H};
+  --accent-dark: #${dark.slice(1)};
+  --accent-soft: #${soft.slice(1)};
+}`,
+        preview: `
+          <div class="preview-tokens">
+            <div class="preview-token-group">
+              <span class="preview-token" style="background:#${H}" title="--accent">--accent</span>
+              <span class="preview-token" style="background:#${dark.slice(1)}" title="--accent-dark">--accent-dark</span>
+              <span class="preview-token" style="background:#${soft.slice(1)}" title="--accent-soft">--accent-soft</span>
+            </div> 
+          </div>
+        `,
+      },
+      {
+        label: "Simple class names",
+        code: `.myforecolor { color: #${H}; }
+.mybgcolor   { background-color: #${H}; }
+.mybordercolor { border: 3px solid #${H}; }`,
+        preview: `
+          <div class="preview-simple">
+            <p style="color:#${H};margin:0 0 6px">Text with <code>myforecolor</code></p>
+            <div style="background:#${H};color:${textOn};padding:6px 10px;border-radius:6px;margin-bottom:6px">
+              Div with <code>mybgcolor</code>
+            </div>
+            <div style="border:3px solid #${H};padding:6px 10px;border-radius:6px">
+              Div with <code>mybordercolor</code>
+            </div>
+          </div>
+        `,
+      },
+      {
+        label: "Button",
+        code: `.cta {
+  background: #${H};
+  color: ${textOn};
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-weight: 600;
+}`,
+        preview: `
+          <div class="preview-center">
+            <span style="display:inline-block;background:#${H};color:${textOn};
+                         padding:8px 16px;border-radius:999px;font-weight:600">
+              Click me
+            </span>
+          </div>
+        `,
+      },
+      {
+        label: "Border",
+        code: `.outline {
+  border: 2px solid #${H};
+  padding: 10px 14px;
+  border-radius: 8px;
+}`,
+        preview: `
+          <div class="preview-center">
+            <div style="border:2px solid #${H};padding:10px 14px;border-radius:8px">
+              Outlined box
+            </div>
+          </div>
+        `,
+      },
+      {
+        label: "Text shadow (hex)",
+        code: `.text-shadow-hex {
+  text-shadow: 4px 4px 2px #${H};
+}`,
+        preview: `
+          <div class="preview-center">
+            <p style="text-shadow:4px 4px 2px #${H};font-size:1.25rem;font-weight:700;margin:0">
+              Shadowed text
+            </p>
+          </div>
+        `,
+      },
+      {
+        label: "Text shadow (rgb)",
+        code: `.text-shadow-rgb {
+  text-shadow: 4px 4px 2px rgba(${rgb.red}, ${rgb.green}, ${rgb.blue}, 0.8);
+}`,
+        preview: `
+          <div class="preview-center">
+            <p style="text-shadow:4px 4px 2px rgba(${rgb.red}, ${rgb.green}, ${rgb.blue}, 0.8);
+                       font-size:1.25rem;font-weight:700;margin:0">
+              Shadowed text
+            </p>
+          </div>
+        `,
+      },
+      {
+        label: "Box shadow (prefixed)",
+        code: `.box-shadow {
+  -moz-box-shadow:    1px 1px 3px 2px #${H};
+  -webkit-box-shadow: 1px 1px 3px 2px #${H};
+  box-shadow:         1px 1px 3px 2px #${H};
+}`,
+        preview: `
+          <div class="preview-center">
+            <div style="box-shadow:1px 1px 3px 2px #${H};padding:10px 16px;border-radius:8px;background:var(--surface)">
+              Raised box
+            </div>
+          </div>
+        `,
+      },
+      {
+        label: "Glow",
+        code: `.glow {
+  box-shadow: 0 0 24px #${H};
+}`,
+        preview: `
+          <div class="preview-center">
+            <div style="box-shadow:0 0 24px #${H};padding:10px 16px;border-radius:8px;background:var(--surface)">
+              Glowing box
+            </div>
+          </div>
+        `,
+      },
+      {
+        label: "Gradient",
+        code: `.hero {
+        background: linear-gradient(
+          135deg,
+          #${H},
+          #${HEX(soft).replace(/^#/, "")}
+        );
+      }`,
+        preview: `<div class="preview-gradient" style="--g-start:#${H};--g-end:#${HEX(soft).replace(/^#/, "")}"></div>`,
+      },
     ];
 
     cssEl.innerHTML = `
       <h2>CSS Examples</h2>
-      <div class="code-grid">
-        ${cards.map(([label, code]) => `
-          <article class="code-card">
-            <div class="code-head">
-              <span class="label">${label}</span>
-              <button class="copy-btn" data-copy="${code.replace(/"/g, "&quot;")}" aria-label="Copy ${label} CSS">copy</button>
+      <p class="muted">Each snippet is paired with a live preview using the current color.</p>
+      <div class="code-demo-grid">
+        ${examples.map((ex) => `
+          <div class="code-demo">
+            <div class="code-demo-head">
+              <span class="label">${ex.label}</span>
+              <button class="copy-btn" type="button"
+                      data-copy="${ex.code.replace(/"/g, "&quot;")}"
+                      aria-label="Copy ${ex.label} CSS">copy</button>
             </div>
-            <pre><code>${code.replace(/</g, "&lt;")}</code></pre>
-          </article>
+            <pre class="code-demo-code"><code>${ex.code.replace(/</g, "&lt;")}</code></pre>
+            <div class="code-demo-preview">${ex.preview}</div>
+          </div>
         `).join("")}
       </div>
-      <h3>Live previews</h3>
-      <p style="color:#${H}">The quick brown fox jumps over the lazy dog.</p>
-      <div style="padding:10px;color:${readableTextOn(safe)};text-align:center;background-color:#${H}">Background #${H}</div>
-      <div style="padding:10px;color:${readableTextOn(safe)};text-align:center;border:3px solid #${H};margin-top:8px">Border #${H}</div>
-      <p style="text-shadow: 4px 4px 2px #${H};margin-top:8px">Text with shadow #${H}</p>
-      <div style="padding:10px;box-shadow: 1px 1px 3px 2px #${H};margin-top:8px">Box with shadow #${H}</div>
     `;
   }
 
+  // --- Color Blindness ---
+  renderInlineCVD(safe);
+  
+  // --- Known names ---
+  renderColorNames(safe);
+
+  // --- WCAG contrast ---
+  renderContrast(safe);
+
   // Re-bind copy handlers for all freshly rendered sections
-  ["verdict", "compare", "color-spaces", "base-numbers", "harmonies", "monochromatic", "alternatives", "related-colors", "css-examples"]
+  [
+    "verdict", 
+    "contrast",
+    "compare", 
+    "color-names", 
+    "color-spaces", 
+    "base-numbers", 
+    "harmonies", 
+    "monochromatic", 
+    "alternatives", 
+    "related-colors", 
+    "css-examples",
+    "color-blindness"
+  ]
     .forEach((id) => {
       const el = document.getElementById(id);
       if (el) attachCopyHandlers(el);
@@ -702,6 +1099,88 @@ function renderThemeButton() {
 // Bootstrap
 // ============================================================
 document.addEventListener("DOMContentLoaded", () => {
+  // ------------------------------------------------------------
+  // 1. Initial state: apply color from URL or show welcome
+  // ------------------------------------------------------------
+  applyCurrentPathColor();
+
+  // ------------------------------------------------------------
+  // 2. Page form (#color-form on /index.html)
+  // ------------------------------------------------------------
+  const form = document.getElementById("color-form");
+  const input = document.getElementById("color-input");
+
+  if (form && input) {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      // Clear any previous error
+      const errorEl = document.getElementById("color-error");
+      if (errorEl) {
+        errorEl.textContent = "";
+        errorEl.hidden = true;
+      }
+      input.removeAttribute("aria-invalid");
+
+      const raw = input.value.trim();
+      const color = normalizeColor(raw);
+
+      if (!color) {
+        if (errorEl) {
+          errorEl.textContent =
+            "Please enter a valid 3 or 6 character hex color (e.g. ff5733 or #ff5733).";
+          errorEl.hidden = false;
+        }
+        input.setAttribute("aria-invalid", "true");
+        input.focus();
+        return;
+      }
+
+      // Normalize the input value to lowercase, no leading #
+      input.value = color;
+
+      // Update URL and render — on the home page this is an in-place
+      // navigation (no reload); on other pages it's a full navigation.
+      updateURLAndApply(color);
+    });
+
+    // Clear error as soon as the user starts typing again
+    input.addEventListener("input", () => {
+      const errorEl = document.getElementById("color-error");
+      if (errorEl && !errorEl.hidden) {
+        errorEl.textContent = "";
+        errorEl.hidden = true;
+      }
+      input.removeAttribute("aria-invalid");
+    });
+  }
+
+  // ------------------------------------------------------------
+  // 3. Browser back/forward
+  // ------------------------------------------------------------
+  window.addEventListener("popstate", applyCurrentPathColor);
+
+  // ------------------------------------------------------------
+  // 4. Welcome-state suggestion swatches
+  //    (optional — makes the samples update in place instead of
+  //     doing a full navigation)
+  // ------------------------------------------------------------
+  document.querySelectorAll(".welcome-swatch[data-color]").forEach((a) => {
+    a.addEventListener("click", (e) => {
+      const color = a.getAttribute("data-color");
+      if (!color) return;
+      const normalized = normalizeColor(color);
+      if (!normalized) return;
+
+      e.preventDefault();
+      const pageInput = document.getElementById("color-input");
+      if (pageInput) pageInput.value = normalized;
+      updateURLAndApply(normalized);
+    });
+  });
+});
+/*
+document.addEventListener("DOMContentLoaded", () => {
   Theme.init();
   Theme.onChange((isLight) => {
     const color = readColorFromPath() || "ffffff";
@@ -741,3 +1220,111 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.addEventListener("popstate", applyCurrentPathColor);
 });
+*/
+// Labeled ramp: one row per step, showing label / swatch / hex / copy.
+function factorRamp(steps, heading) {
+  return `
+    <div class="factor-ramp">
+      ${heading ? `<h4 class="factor-ramp-heading">${heading}</h4>` : ""}
+      <div class="factor-ramp-rows">
+        ${steps.map(({ label, hex }) => {
+          const H = HEX(hex);
+          return `
+            <div class="factor-row">
+              <span class="factor-label">${label}</span>
+              <a class="factor-swatch" href="/hex/${hex.toLowerCase()}"
+                 title="#${H}" style="background:#${H}"></a>
+              <code class="factor-hex">#${H}</code>
+              <button class="copy-btn" type="button"
+                      data-copy="#${H}"
+                      aria-label="Copy #${H}">copy</button>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    </div>
+  `;
+}
+
+// Human-readable explanation for a no-op ramp.
+function rampFallbackMessage(reason, hex) {
+  const H = HEX(hex);
+  switch (reason) {
+    case "already-white":
+      return `#${H} is already white — blending it toward white produces no change.`;
+    case "already-black":
+      return `#${H} is already black — blending it toward black produces no change.`;
+    case "already-saturated":
+      return `#${H} is already at 100% saturation at this hue and lightness. To make it feel more vivid, try a lighter tint or shift the hue toward a warmer or cooler neighbor.`;
+    case "already-grey":
+      return `#${H} is fully desaturated (grey) — there's no saturation left to remove.`;
+    case "l-at-max":
+      return `#${H} has maximum lightness — changing saturation doesn't affect its color. Pick a tint or shade of the underlying hue first.`;
+    case "l-at-min":
+      return `#${H} has minimum lightness — changing saturation doesn't affect its color. Pick a tint or shade of the underlying hue first.`;
+    default:
+      return `#${H} has no values for this ramp.`;
+  }
+}
+
+// Render one monochromatic ramp, handling the no-op case.
+function rampSection({ title, description, formula, ramp }) {
+  if (ramp.available) {
+    return `
+      <section class="mono-group">
+        <h3>${title}</h3>
+        <p class="muted">${description}</p>
+        ${formula ? `<p class="muted formula">${formula}</p>` : ""}
+        ${factorRamp(ramp.steps)}
+      </section>
+    `;
+  }
+  return `
+    <section class="mono-group">
+      <h3>${title}</h3>
+      <p class="muted">${rampFallbackMessage(ramp.reason, ramp.steps[0].hex)}</p>
+    </section>
+  `;
+}
+
+function hueSteps(hexStr, stepDeg = 15) {
+  const [h, s, l] = hex2hsl(hexStr);
+  const out = [{ label: "Base", hex: HEX(hexStr) }];
+  for (let deg = stepDeg; deg <= 180; deg += stepDeg) {
+    for (const sign of [-1, 1]) {
+      let hh = h + (sign * deg) / 360;
+      if (hh < 0) hh += 1;
+      if (hh > 1) hh -= 1;
+      out.push({
+        label: `${sign > 0 ? "+" : "−"}${deg}°`,
+        hex: hsl2hex([hh, s, l]),
+      });
+    }
+  }
+  return { steps: out, available: true };
+}
+
+function applyCurrentPathColor() {
+  const color = readColorFromPath();
+  if (!color) {
+    showWelcome();
+    return;
+  }
+  applyColor(color);
+  const input = document.getElementById("color-input");
+  if (input) input.value = color;
+}
+
+function showWelcome() {
+  const welcome = document.getElementById("welcome");
+  const details = document.getElementById("details");
+  if (welcome) welcome.hidden = false;
+  if (details) details.hidden = true;
+}
+
+function showDetails() {
+  const welcome = document.getElementById("welcome");
+  const details = document.getElementById("details");
+  if (welcome) welcome.hidden = true;
+  if (details) details.hidden = false;
+}

@@ -194,6 +194,91 @@
     const vLime = colorVerdict("beff00");
     test("Verdict", "BEFF00 → strong accent", vLime.accent.label, "Strong accent");
 
+    test("Blend", "mix ff0000 + 0000ff @ 50% = 800080", mixColors("ff0000", "0000ff", 0.5), "800080");
+    test("Blend", "mix @ 0% = A", mixColors("ff0000", "0000ff", 0), "FF0000");
+    test("Blend", "mix @ 100% = B", mixColors("ff0000", "0000ff", 1), "0000FF");
+
+    test("Gradient", "10 stops from white→black", buildGradient("ffffff", "000000", 10).length, 10);
+
+    test("CVD", "protanopia of #ff0000 changes red", simulateCVD("ff0000", "protanopia", 1), "8A4700", 1);
+    test("CVD", "severity 0 = identity", simulateCVD("ff0000", "protanopia", 0), "FF0000");
+
+    test("Percent", "rgbPercent of white = [100,100,100]", rgbPercent("ffffff"), [100, 100, 100]);
+    test("Percent", "cmykPercent of white = [0,0,0,0]", cmykPercent("ffffff"), [0, 0, 0, 0]);
+
+        // ---- Ramp availability ----
+    const wTints = tintSteps("FFFFFF");
+    test("Ramp: tints of white unavailable", wTints.available, false);
+    test("Ramp: tints of white reason", wTints.reason, "already-white");
+    test("Ramp: tints of white has base", wTints.steps.length, 1);
+
+    const kShades = shadeSteps("000000");
+    test("Ramp: shades of black unavailable", kShades.available, false);
+    test("Ramp: shades of black reason", kShades.reason, "already-black");
+
+    const limeMore = moreSaturationSteps("BEFF00");
+    test("Ramp: BEFF00 more-sat unavailable", limeMore.available, false);
+    test("Ramp: BEFF00 more-sat reason", limeMore.reason, "already-saturated");
+
+    const greyLess = lessSaturationSteps("808080");
+    test("Ramp: grey less-sat unavailable", greyLess.available, false);
+
+    // ---- Normal cases still work ----
+    const redTints = tintSteps("DC2626");
+    test("Ramp: red tints available", redTints.available, true);
+    test("Ramp: red tints length", redTints.steps.length, 10);
+    test("Ramp: red 20% tint = #E35151",
+      redTints.steps.find(s => s.label === "20% tint").hex,
+      "E35151");
+
+    const redShades = shadeSteps("DC2626");
+    test("Ramp: red 20% shade = #B01E1E",
+      redShades.steps.find(s => s.label === "20% shade").hex,
+      "B01E1E");
+
+    // ---- WCAG levels ----
+    const r1 = wcagLevels(4.83);
+    test("WCAG: 4.83 AA normal", r1.aaNormal, true);
+    test("WCAG: 4.83 AA large", r1.aaLarge, true);
+    test("WCAG: 4.83 AAA normal", r1.aaaNormal, false);
+    test("WCAG: 4.83 AAA large", r1.aaaLarge, true);
+
+    const r2 = wcagLevels(2.9);
+    test("WCAG: 2.9 fails everything", r2.aaNormal || r2.aaLarge, false);
+
+    // ---- Report structure ----
+    const rep = contrastReport("DC2626");
+    test("WCAG: DC2626 white ≈ 4.83", rep.whiteRatio, 4.83, 0.05);
+    test("WCAG: DC2626 black ≈ 4.35", rep.blackRatio, 4.35, 0.05);
+    test("WCAG: DC2626 white wins", rep.whiteWins, true);
+    test("WCAG: DC2626 has suggestion", rep.suggestion !== null, true);
+
+    const repLime = contrastReport("BEFF00");
+    test("WCAG: BEFF00 black wins", repLime.whiteWins, false);
+    test("WCAG: BEFF00 black passes AAA", repLime.blackLevels.aaaNormal, true);
+    test("WCAG: BEFF00 no suggestion needed", repLime.suggestion, null);
+
+    // ---- Passing color for DC2626 at AAA ----
+    const pass = nearestPassingVariation("DC2626", true, 7.0);
+    test("WCAG: DC2626 has a tint passing AAA", pass !== null, true);
+    test("WCAG: passing tint reaches 7:1", pass.ratio >= 7.0, true);
+
+    // ---- nearbyNamedColors ----
+    const fake = [
+      { hex: "C0392B", names: [{ name: "Puce", source: "X" }] },
+      { hex: "FF0000", names: [{ name: "Red", source: "X" }] },
+      { hex: "FFA500", names: [{ name: "Orange", source: "X" }] },  // far hue
+      { hex: "808080", names: [{ name: "Grey", source: "X" }] },    // skip, grey
+      { hex: "DC2626", names: [{ name: "Self", source: "X" }] },    // skip, self
+      { hex: "E35151", names: [{ name: "Pale red", source: "X" }] },
+    ];
+    const result = nearbyNamedColors("DC2626", fake, 5, 30);
+    test("nearby: excludes self", result.some(c => c.hex === "DC2626"), false);
+    test("nearby: excludes grey", result.some(c => c.hex === "808080"), false);
+    test("nearby: excludes far hue", result.some(c => c.hex === "FFA500"), false);
+    test("nearby: includes true red", result.some(c => c.hex === "FF0000"), true);
+    test("nearby: returns at most 5", result.length <= 5, true);
+
     // ------------------------------------------------------------
     // Render results
     // ------------------------------------------------------------

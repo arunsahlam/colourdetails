@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gradient Generator — Two-Color CSS Gradient</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Generate a CSS linear gradient between two hex colors. Copy the exact CSS." />
+  <meta name="theme-color" content="#ffffff" />
+  <link rel="icon" href="/logo.png" type="image/png" />
+  <link rel="stylesheet" href="/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body data-page="gradient">
+  <!-- @include header -->
+  <main class="container">
+    <form id="grad-form" class="card">
+      <div class="blend-row">
+        <label>Start <input id="grad-a" type="text" value="beff00" maxlength="7" /></label>
+        <label>End <input id="grad-b" type="text" value="ff00be" maxlength="7" /></label>
+        <label>
+          Angle <span id="angle-label">135°</span>
+          <input id="angle" type="range" min="0" max="360" value="135" />
+        </label>
+      </div>
+    </form>
+
+    <section class="card">
+      <h2>Preview</h2>
+      <div id="grad-preview" style="height:180px;border-radius:8px;border:1px solid var(--border)"></div>
+    </section>
+
+    <section class="card">
+      <h2>CSS</h2>
+      <div class="code-card">
+        <div class="code-head">
+          <span class="label">linear-gradient</span>
+          <button class="copy-btn" id="grad-copy" aria-label="Copy gradient CSS">copy</button>
+        </div>
+        <pre><code id="grad-code"></code></pre>
+      </div>
+    </section>
+  </main>
+  <!-- @include footer -->
+  <script src="/color.js"></script>
+  <script src="/nav.js"></script>
+  <script>
+    const els = {
+      a: document.getElementById("grad-a"),
+      b: document.getElementById("grad-b"),
+      angle: document.getElementById("angle"),
+      angleLabel: document.getElementById("angle-label"),
+      preview: document.getElementById("grad-preview"),
+      code: document.getElementById("grad-code"),
+      copy: document.getElementById("grad-copy"),
+    };
+
+    function render() {
+      const a = validateHex(els.a.value, true);
+      const b = validateHex(els.b.value, true);
+      const deg = els.angle.value;
+      els.angleLabel.textContent = deg + "°";
+
+      const css = `background: linear-gradient(${deg}deg, #${HEX(a)}, #${HEX(b)});`;
+      els.preview.style.background = `linear-gradient(${deg}deg, #${a}, #${b})`;
+      els.code.textContent = css;
+      els.copy.setAttribute("data-copy", css);
+    }
+
+    ["input", "change"].forEach((ev) => {
+      els.a.addEventListener(ev, render);
+      els.b.addEventListener(ev, render);
+      els.angle.addEventListener(ev, render);
+    });
+
+    els.copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(els.copy.getAttribute("data-copy"));
+        els.copy.textContent = "copied";
+        setTimeout(() => (els.copy.textContent = "copy"), 1200);
+      } catch {}
+    });
+
+    render();
+  </script>
+</body>
+</html>

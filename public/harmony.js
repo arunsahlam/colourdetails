@@ -51,6 +51,20 @@ function hex2analagous(hexStr) {
 }
 
 // ------------------------------------------------------------
+// Explicit aliases (matching ColorHexa's named lists)
+// ------------------------------------------------------------
+function triadicColors(hexStr) {
+  const [a, b] = hex2triadic(hexStr);
+  // ColorHexa lists base + 2 companions. Order: +120°, +240°.
+  return [hexStr, a, b];
+}
+
+function analogousColors(hexStr) {
+  const [minus, base, plus] = hex2analagous(hexStr);
+  return [minus, base, plus];
+}
+
+// ------------------------------------------------------------
 // SVG wheel
 // ------------------------------------------------------------
 
