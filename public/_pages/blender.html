@@ -1,20 +1,59 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Color Blender — Mix Two Hex Colors</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Blend two hex colors. See the mixed color, the interpolation ramp, and copy-ready values." />
-  <meta name="theme-color" content="#ffffff" />
-  <link rel="icon" href="/logo.png" type="image/png" />
-  <link rel="stylesheet" href="/style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- @include head-meta -->
+  <link rel="canonical" href="https://colourdetails.com/blender.html" />
+  <title>Color Blender — Mix Two Hex Colors Online</title>
+  <meta name="description" content="Mix two hex colors in any ratio. See the resulting hex, RGB, and an 11-step interpolation ramp between the two colors." />
+  <!--
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Color Blender — Mix Two Hex Colors Online" />
+  <meta property="og:description" content="Mix two hex colors in any ratio. See the resulting hex, RGB, and an 11-step interpolation ramp between the two colors." />
+  <meta property="og:url"         content="https://colourdetails.com/blender.html" />
+  <meta property="og:image"       content="https://colourdetails.com/assets/og-blender.png" />
+  <meta property="og:site_name"   content="Color Guide" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:title"      content="Color Blender — Mix Two Hex Colors Online" />
+  <meta name="twitter:description" content="Mix two hex colors in any ratio. See the resulting hex, RGB, and an 11-step interpolation ramp between the two colors." />
+  <meta name="twitter:image"      content="https://colourdetails.com/assets/og-blender.png" />
+  -->
+  <script type="application/ld+json">
+  { 
+    "@type": "WebApplication", 
+    "applicationCategory": "DesignApplication", 
+    "name": "Color Blender", 
+    "url": "https://colourdetails.com/blender.html" 
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How do you blend two hex colors?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Each RGB channel is mixed with linear interpolation: new = A × (1 − t) + B × t, where t is the mix ratio from 0 to 1."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "What does a 50% mix of two colors look like?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "A 50% mix produces the average of the two RGB values, which is the midpoint of the interpolation ramp."
+        }
+      }
+    ]
+  }
+  </script>
 </head>
 <body data-page="blender">
   <!-- @include header -->
   <main class="container">
+    <h1>Color Blender</h1>
     <form id="blend-form" class="card">
       <div class="blend-row">
         <label>
@@ -42,6 +81,18 @@
       <h2>Interpolation ramp</h2>
       <div id="ramp" class="ramp"></div>
       <div id="ramp-values" class="ramp-values"></div>
+    </section>
+
+    <section class="card faq">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>How do you blend two hex colors?</summary>
+        <p>Each RGB channel is mixed with linear interpolation: <code>new = A × (1 − t) + B × t</code>, where <code>t</code> is the mix ratio from 0 to 1.</p>
+      </details>
+      <details>
+        <summary>What does a 50% mix of two colors look like?</summary>
+        <p>A 50% mix produces the average of the two RGB values, which is the midpoint of the interpolation ramp.</p>
+      </details>
     </section>
   </main>
   <!-- @include footer -->

@@ -2028,3 +2028,58 @@ div[id][class*="card"] {
     align-items: flex-start;
   }
 }
+
+/* ---------- Popular colors (home page) ---------- */
+.popular-colors {
+  margin-top: 8px;
+}
+.popular-grid {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  padding-bottom: 4px;
+  margin-top: 12px;
+}
+.popular-grid::-webkit-scrollbar { display: none; }
+.popular-colors a { flex: 0 0 auto; }
+
+.popular-colors a:hover,
+.popular-colors a:focus-visible {
+  background: var(--surface-3);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+  outline: none;
+}
+
+.popular-swatch {
+  display: block;
+  width: 56px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(128, 128, 128, 0.3);
+  flex: 0 0 auto;
+}
+
+.popular-colors code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .popular-grid {
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 6px;
+  }
+  .popular-swatch {
+    width: 24px;
+    height: 24px;
+  }
+  .popular-colors code {
+    font-size: 0.7rem;
+  }
+}

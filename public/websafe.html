@@ -6,15 +6,60 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Web-Safe Colors — 216 Color Chart</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="The 216-color web-safe palette with hex codes. Click any swatch to view details." />
-  <link rel="icon" href="/logo.png" type="image/png" />
-  <link rel="stylesheet" href="/style.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- _partials/head-meta.html -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#ffffff" />
+
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+  
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="/style.css" />
+
+<!-- Open Graph defaults (per-page overrides come after this include) -->
+<meta property="og:site_name" content="Color Guide" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EYJ4WV7T5W"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EYJ4WV7T5W');
+</script>
+  <link rel="canonical" href="https://colourdetails.com/websafe.html" />
+  <title>Web-Safe Colors — 216 Hex Chart with RGB Values</title>
+  <meta name="description" content="The complete 216-color web-safe palette with hex and RGB values. Every color is a clickable swatch linking to its detail page." />
+  <!--
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Web-Safe Colors — 216 Hex Chart with RGB Values" />
+  <meta property="og:description" content="The complete 216-color web-safe palette with hex and RGB values. Every color is a clickable swatch linking to its detail page." />
+  <meta property="og:url"         content="https://colourdetails.com/websafe.html" />
+  <meta property="og:image"       content="https://colourdetails.com/assets/og-websafe.png" />
+  <meta property="og:site_name"   content="Color Guide" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:title"      content="Web-Safe Colors — 216 Hex Chart with RGB Values" />
+  <meta name="twitter:description" content="The complete 216-color web-safe palette with hex and RGB values. Every color is a clickable swatch linking to its detail page." />
+  <meta name="twitter:image"      content="https://colourdetails.com/assets/og-websafe.png" />
+  -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Web-Safe Colors",
+      "numberOfItems": 216
+    }
+  </script>
 </head>
 <body data-page="websafe">
   <header class="site-header">
@@ -111,12 +156,12 @@
   <footer class="site-footer">
   <div class="site-footer-inner">
     <p class="muted">
-      Color Guide — hex values, harmonies, variations, contrast, and conversions.
+      Colour Details — hex values, harmonies, variations, contrast, and conversions.
       Built for designers and developers.
     </p>
     <nav class="site-footer-nav" aria-label="Footer">
       <a href="/index.html">Home</a>
-      <a href="/colors.html">Named Colors</a>
+      <a href="/colors.html">Named Colours</a>
       <a href="/websafe.html">Web-safe</a>
       <a href="/blender.html">Blender</a>
       <a href="/gradient.html">Gradient</a>

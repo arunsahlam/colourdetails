@@ -6,26 +6,64 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Color Names — Search 450+ Named Colors</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Search a list of named colors by name, hex, or source. Each color shows hex, RGB, and HSL with a link to full details." />
-  <meta name="theme-color" content="#ffffff" />
-  <link rel="icon" href="/logo.png" type="image/png" />
-  <link rel="canonical" href="/colors.html" />
-  <link rel="stylesheet" href="/style.css" />
+  <!-- _partials/head-meta.html -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#ffffff" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
+  
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+<link rel="stylesheet" href="/style.css" />
+
+<!-- Open Graph defaults (per-page overrides come after this include) -->
+<meta property="og:site_name" content="Color Guide" />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EYJ4WV7T5W"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-EYJ4WV7T5W');
+</script>
+  <link rel="canonical" href="https://colourdetails.com/colors.html" />
+  <title>Color Names — Search 450+ Named Hex Colors with RGB & HSL</title>
+  <meta name="description" content="Search 450+ named colors by name, hex, or source. See RGB, HSL, and hex values for each color, with links to full details." />
+  <!--
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Color Names — Search 450+ Named Hex Colors with RGB & HSL" />
+  <meta property="og:description" content="Search 450+ named colors by name, hex, or source. See RGB, HSL, and hex values for each color, with links to full details." />
+  <meta property="og:url"         content="https://colourdetails.com/colors.html" />
+  <meta property="og:image"       content="https://colourdetails.com/assets/og-colors.png" />
+  <meta property="og:site_name"   content="Color Guide" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:title"      content="Color Names — Search 450+ Named Hex Colors with RGB & HSL" />
+  <meta name="twitter:description" content="Search 450+ named colors by name, hex, or source. See RGB, HSL, and hex values for each color, with links to full details." />
+  <meta name="twitter:image"      content="https://colourdetails.com/assets/og-colors.png" />
+  -->
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "ItemList",
-    "name": "Named Colors",
-    "description": "A searchable list of named colors with hex, RGB, and HSL values."
-  }
+    {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Named Colors",
+      "description": "A searchable list of named colors with hex, RGB, and HSL values."
+      "numberOfItems": 450,
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Alice blue", "url": "https://colourdetails.com/hex/f0f8ff" },
+        { "@type": "ListItem", "position": 2, "name": "Auburn", "url": "https://colourdetails.com/hex/a52a2a" },
+      ]
+    }
   </script>
 </head>
 <body data-page="colors">
@@ -225,12 +263,12 @@
   <footer class="site-footer">
   <div class="site-footer-inner">
     <p class="muted">
-      Color Guide — hex values, harmonies, variations, contrast, and conversions.
+      Colour Details — hex values, harmonies, variations, contrast, and conversions.
       Built for designers and developers.
     </p>
     <nav class="site-footer-nav" aria-label="Footer">
       <a href="/index.html">Home</a>
-      <a href="/colors.html">Named Colors</a>
+      <a href="/colors.html">Named Colours</a>
       <a href="/websafe.html">Web-safe</a>
       <a href="/blender.html">Blender</a>
       <a href="/gradient.html">Gradient</a>
