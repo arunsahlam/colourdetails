@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <!-- @include head-meta -->
+  <link rel="canonical" href="https://colourdetails.com/gradient.html" />
+  <title>CSS Gradient Generator — Two-Color Linear Gradients</title>
+  <meta name="description" content="Generate a two-color linear CSS gradient. Adjust the angle, preview the result live, and copy the exact CSS." />
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="CSS Gradient Generator — Two-Color Linear Gradients" />
+  <meta property="og:description" content="Generate a two-color linear CSS gradient. Adjust the angle, preview the result live, and copy the exact CSS." />
+  <meta property="og:url"         content="https://colourdetails.com/gradient.html" />
+  <meta property="og:image"       content="https://colourdetails.com/assets/og-gradient.png" />
+  <meta property="og:site_name"   content="Color Guide" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:title"      content="CSS Gradient Generator — Two-Color Linear Gradients" />
+  <meta name="twitter:description" content="Generate a two-color linear CSS gradient. Adjust the angle, preview the result live, and copy the exact CSS." />
+  <meta name="twitter:image"      content="https://colourdetails.com/assets/og-gradient.png" />
+  <!-- @include analytics -->
+  <script type="application/ld+json">
+  { 
+    "@type": "WebApplication", 
+    "applicationCategory": "DesignApplication", 
+    "name": "Color Gradient Generator", 
+    "url": "https://colourdetails.com/gradient.html" 
+  }
+  </script>
+</head>
+<body data-page="gradient">
+  <!-- @include header -->
+  <main class="container">
+    <h1>Gradient Generator</h1>
+    <p class="lede">
+  Generate a two-color linear CSS gradient. Pick a start and end color,
+  set the angle, and copy the exact <code>linear-gradient()</code> declaration.
+  Preview updates live as you adjust the values.
+</p>
+    <form id="grad-form" class="card">
+      <div class="blend-row">
+        <label>Start <input id="grad-a" type="text" value="beff00" maxlength="7" /></label>
+        <label>End <input id="grad-b" type="text" value="ff00be" maxlength="7" /></label>
+        <label>
+          Angle <span id="angle-label">135°</span>
+          <input id="angle" type="range" min="0" max="360" value="135" />
+        </label>
+      </div>
+    </form>
+
+    <section class="card">
+      <h2>Preview</h2>
+      <div id="grad-preview" style="height:180px;border-radius:8px;border:1px solid var(--border)"></div>
+    </section>
+
+    <section class="card">
+      <h2>CSS</h2>
+      <div class="code-card">
+        <div class="code-head">
+          <span class="label">linear-gradient</span>
+          <button class="copy-btn" id="grad-copy" aria-label="Copy gradient CSS">copy</button>
+        </div>
+        <pre><code id="grad-code"></code></pre>
+      </div>
+    </section>
+  </main>
+  <!-- @include footer -->
+  <script src="/js/color.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/pages/gradient.js"></script>
+</body>
+</html>

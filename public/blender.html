@@ -1,0 +1,185 @@
+<!--
+  GENERATED FILE — do not edit directly.
+  Source:    _pages/blender.html
+  Rebuild:   node scripts/build-pages.js
+-->
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <!-- _partials/head-meta.html -->
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#ffffff" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image:width"  content="1200" />
+<meta property="og:image:height" content="630" />
+<link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="shortcut icon" href="/favicon.ico" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="/css/style.css" />
+  <link rel="canonical" href="https://colourdetails.com/blender.html" />
+  <title>Color Blender — Mix Two Hex Colors Online</title>
+  <meta name="description" content="Mix two hex colors in any ratio. See the resulting hex, RGB, and an 11-step interpolation ramp between the two colors." />
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Color Blender — Mix Two Hex Colors Online" />
+  <meta property="og:description" content="Mix two hex colors in any ratio. See the resulting hex, RGB, and an 11-step interpolation ramp between the two colors." />
+  <meta property="og:url"         content="https://colourdetails.com/blender.html" />
+  <meta property="og:image"       content="https://colourdetails.com/assets/og-blender.png" />
+  <meta property="og:site_name"   content="Color Guide" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:title"      content="Color Blender — Mix Two Hex Colors Online" />
+  <meta name="twitter:description" content="Mix two hex colors in any ratio. See the resulting hex, RGB, and an 11-step interpolation ramp between the two colors." />
+  <meta name="twitter:image"      content="https://colourdetails.com/assets/og-blender.png" />
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-EYJ4WV7T5W"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-EYJ4WV7T5W');
+</script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Color Blender",
+        "url": "https://colourdetails.com/blender.html",
+        "applicationCategory": "DesignApplication",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "How do you blend two hex colors?", "acceptedAnswer": { "@type": "Answer", "text": "Each RGB channel is mixed with linear interpolation: new = A × (1 − t) + B × t, where t is the mix ratio from 0 to 1." } },
+          { "@type": "Question", "name": "What does a 50% mix of two colors look like?", "acceptedAnswer": { "@type": "Answer", "text": "A 50% mix produces the average of the two RGB values, which is the midpoint of the interpolation ramp." } }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body data-page="blender">
+  <header class="site-header">
+  <nav class="site-nav" aria-label="Primary">
+    <a class="site-brand" href="/index.html">
+      <img class="brand-logo" src="/logo.svg" alt="" width="28" height="28" />
+      <span class="brand-text">Colour Details</span>
+    </a>
+
+    <ul class="site-links">
+      <li><a href="/index.html"     data-nav="home">Home</a></li>
+      <li><a href="/colors.html"    data-nav="colors">Named Colors</a></li>
+      <li><a href="/websafe.html"   data-nav="websafe">Web-safe</a></li>
+      <li><a href="/blender.html"   data-nav="blender">Blender</a></li>
+      <li><a href="/gradient.html"  data-nav="gradient">Gradient</a></li>
+      <li><a href="/subtract.html"  data-nav="subtract">Subtract</a></li>
+      <li><a href="/blindness.html" data-nav="cvd">CVD</a></li>
+    </ul>
+    <button id="theme-toggle" class="theme-btn" type="button"
+            aria-label="Cycle theme">◐ Auto</button>
+  </nav>
+  <div class="site-search-row">
+    <form id="nav-color-form" class="nav-search" role="search" novalidate>
+      <label for="nav-color-input" class="visually-hidden">
+        Enter a color code (hex)
+      </label>
+      <input
+        id="nav-color-input"
+        type="text"
+        placeholder="#beff00"
+        autocomplete="off"
+        autocapitalize="off"
+        autocorrect="off"
+        spellcheck="false"
+        inputmode="text"
+        maxlength="7"
+        aria-label="Enter a color code (hex)"
+      />
+      <button type="submit" aria-label="Preview color">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m21 21-4.3-4.3" />
+        </svg>
+      </button>
+    </form>
+  </div>
+</header>
+  <main class="container">
+    <h1>Color Blender</h1>
+    <p class="lede">
+  Mix two hex colors in any ratio and see the resulting hex, RGB, and
+  HSL values. The interpolation ramp shows every intermediate step
+  between the two colors so you can pick the exact shade you need.
+</p>
+    <form id="blend-form" class="card">
+      <div class="blend-row">
+        <label>
+          Color A
+          <input id="blend-a" type="text" value="ff0000" maxlength="7" />
+        </label>
+        <label>
+          Color B
+          <input id="blend-b" type="text" value="0000ff" maxlength="7" />
+        </label>
+        <label>
+          Mix <span id="mix-label">50%</span>
+          <input id="mix" type="range" min="0" max="100" value="50" />
+        </label>
+      </div>
+    </form>
+
+    <section class="card" id="blend-result">
+      <h2>Result</h2>
+      <div id="blend-swatch" class="preview-swatch" style="height:120px"></div>
+      <div id="blend-info" class="preview-info" aria-live="polite"></div>
+    </section>
+
+    <section class="card" id="blend-ramp">
+      <h2>Interpolation ramp</h2>
+      <div id="ramp" class="ramp"></div>
+      <div id="ramp-values" class="ramp-values"></div>
+    </section>
+
+    <section class="card faq">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>How do you blend two hex colors?</summary>
+        <p>Each RGB channel is mixed with linear interpolation: <code>new = A × (1 − t) + B × t</code>, where <code>t</code> is the mix ratio from 0 to 1.</p>
+      </details>
+      <details>
+        <summary>What does a 50% mix of two colors look like?</summary>
+        <p>A 50% mix produces the average of the two RGB values, which is the midpoint of the interpolation ramp.</p>
+      </details>
+    </section>
+  </main>
+  <footer class="site-footer">
+  <div class="site-footer-inner">
+    <p class="muted">
+      Colour Details — hex values, harmonies, variations, contrast, and conversions.
+      Built for designers and developers.
+    </p>
+    <nav class="site-footer-nav" aria-label="Footer">
+      <a href="/index.html">Home</a>
+      <a href="/colors.html">Named Colours</a>
+      <a href="/websafe.html">Web-safe</a>
+      <a href="/blender.html">Blender</a>
+      <a href="/gradient.html">Gradient</a>
+      <a href="/subtract.html">Subtract</a>
+      <a href="/blindness.html">CVD</a>
+    </nav>
+  </div>
+</footer>
+  <script src="/js/color.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/pages/blender.js"></script>
+</body>
+</html>

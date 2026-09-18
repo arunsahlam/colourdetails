@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <!-- @include head-meta -->
+  <link rel="canonical" href="https://colourdetails.com/subtract.html" />
+  <title>Color Subtraction — Subtract Two Hex Colors in CMYK</title>
+  <meta name="description" content="Subtract one hex color from another in CMYK space. See the resulting color, the four arithmetic operations, and copy-ready values." />
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Color Subtraction — Subtract Two Hex Colors in CMYK" />
+  <meta property="og:description" content="Subtract one hex color from another in CMYK space. See the resulting color, the four arithmetic operations, and copy-ready values." />
+  <meta property="og:url"         content="https://colourdetails.com/subtract.html" />
+  <meta property="og:image"       content="https://colourdetails.com/assets/og-subtract.png" />
+  <meta property="og:site_name"   content="Color Guide" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:title"      content="Color Subtraction — Subtract Two Hex Colors in CMYK" />
+  <meta name="twitter:description" content="Subtract one hex color from another in CMYK space. See the resulting color, the four arithmetic operations, and copy-ready values." />
+  <meta name="twitter:image"      content="https://colourdetails.com/assets/og-subtract.png" />
+  <!-- @include analytics -->
+  <script type="application/ld+json">
+  { 
+    "@type": "WebApplication", 
+    "applicationCategory": "DesignApplication", 
+    "name": "Color Subtraction", 
+    "url": "https://colourdetails.com/subtract.html" 
+  }
+  </script>
+</head>
+<body data-page="subtract">
+  <!-- @include header -->
+  <main class="container">
+    <h1>Color Subtraction</h1>
+    <p class="lede">
+  Subtract one hex color from another in CMYK space. See the resulting
+  color along with the four arithmetic operations — addition, subtraction,
+  and their reverses — so you can compare how each operation affects hue.
+</p>
+    <form id="sub-form" class="card">
+      <div class="blend-row">
+        <label>From <input id="sub-a" type="text" value="beff00" maxlength="7" /></label>
+        <label>Subtract <input id="sub-b" type="text" value="00beff" maxlength="7" /></label>
+      </div>
+      <p class="muted">Subtrahend is removed from the minuend in CMYK space. Values clamp to [0, 1].</p>
+    </form>
+
+    <section class="card">
+      <h2>Result</h2>
+      <div class="blend-preview">
+        <div class="blend-cell" id="sub-a-preview"></div>
+        <div class="blend-op">−</div>
+        <div class="blend-cell" id="sub-b-preview"></div>
+        <div class="blend-op">=</div>
+        <div class="blend-cell" id="sub-result"></div>
+      </div>
+      <div id="sub-info" class="preview-info" aria-live="polite"></div>
+    </section>
+
+    <section class="card">
+      <h2>All four operations</h2>
+      <div class="op-grid" id="op-grid"></div>
+    </section>
+  </main>
+  <!-- @include footer -->
+  <script src="/js/color.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/pages/subtract.js"></script>
+</body>
+</html>

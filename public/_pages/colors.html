@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+  <!-- @include head-meta -->
+  <link rel="canonical" href="https://colourdetails.com/colors.html" />
+  <title>Color Names — Search Named Hex Colors with RGB & HSL</title>
+  <meta name="description" content="Search named colors by name, hex, or source. See RGB, HSL, and hex values for each color, with links to full details." />
+  <meta property="og:type"        content="website" />
+  <meta property="og:title"       content="Color Names — Search Named Hex Colors with RGB & HSL" />
+  <meta property="og:description" content="Search named colors by name, hex, or source. See RGB, HSL, and hex values for each color, with links to full details." />
+  <meta property="og:url"         content="https://colourdetails.com/colors.html" />
+  <meta property="og:image"       content="https://colourdetails.com/assets/og-colors.png" />
+  <meta property="og:site_name"   content="Color Guide" />
+  <meta name="twitter:card"       content="summary_large_image" />
+  <meta name="twitter:title"      content="Color Names — Search Named Hex Colors with RGB & HSL" />
+  <meta name="twitter:description" content="Search named colors by name, hex, or source. See RGB, HSL, and hex values for each color, with links to full details." />
+  <meta name="twitter:image"      content="https://colourdetails.com/assets/og-colors.png" />
+  <!-- @include analytics -->
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://colourdetails.com/" },
+            { "@type": "ListItem", "position": 2, "name": "Colors", "item": "https://colourdetails.com/colors.html" }
+          ]
+        },
+        {
+          "@type": "ItemList",
+          "name": "Named Colors",
+          "description": "A searchable list of named colors with hex, RGB, and HSL values.",
+          "numberOfItems": 450,
+          "itemListElement": [
+            { "@type": "ListItem", "position": 1, "name": "Alice blue", "url": "https://colourdetails.com/hex/f0f8ff" },
+            { "@type": "ListItem", "position": 2, "name": "Auburn", "url": "https://colourdetails.com/hex/a52a2a" }
+          ]
+        }
+    }
+  </script>
+</head>
+<body data-page="colors">
+  <!-- @include header -->
+
+  <main class="container">
+    <h1>Color Names — Named Hex Colors</h1>
+    <p class="lede">Browse named colors from Crayola, Pantone, X11, ISCC-NBS, and other references. Each color shows its hex, RGB, and HSL values, with links to its full detail page</p>
+    <section class="card">
+      <div class="names-controls">
+        <label for="names-search" class="visually-hidden">Search colors by name, hex, or source</label>
+        <input
+          id="names-search"
+          type="search"
+          placeholder="Search by name, hex, or source…"
+          autocomplete="off"
+          aria-label="Search colors"
+        />
+        <select id="names-sort" aria-label="Sort order">
+          <option value="name-asc">Name (A–Z)</option>
+          <option value="name-desc">Name (Z–A)</option>
+          <option value="hex-asc">Hex (ascending)</option>
+          <option value="hue-asc">Hue (0 → 360)</option>
+          <option value="light-asc">Lightness (dark → light)</option>
+          <option value="light-desc">Lightness (light → dark)</option>
+        </select>
+        <span id="names-count" class="muted"></span>
+      </div>
+
+      <div id="names-grid" class="names-grid"></div>
+      <p id="names-empty" class="muted" hidden>No colors match your search.</p>
+
+      <div class="names-more-wrap">
+        <button id="names-more" class="btn-more" type="button" hidden>Show more</button>
+      </div>
+    </section>
+  </main>
+  <!-- @include footer -->
+  <script src="/colors-data.js"></script>
+  <script src="/js/color.js"></script>
+  <script src="/js/nav.js"></script>
+  <script src="/js/pages/colors.js"></script>
+</body>
+</html>

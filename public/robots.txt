@@ -1,0 +1,10 @@
+# https://colourdetails.com/robots.txt
+
+User-agent: *
+Allow: /
+Disallow: /_pages/
+Disallow: /_partials/
+Disallow: /scripts/
+Disallow: /colors.template.html
+
+Sitemap: https://colourdetails.com/sitemap.xml
