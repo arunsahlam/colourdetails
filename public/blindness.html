@@ -4,7 +4,7 @@
   Rebuild:   node scripts/build-pages.js
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
   <!-- _partials/head-meta.html -->
 <meta charset="UTF-8" />
@@ -26,6 +26,9 @@
 <!-- Open Graph defaults (per-page overrides come after this include) -->
 <meta property="og:site_name" content="Color Guide" />
 <meta property="og:type" content="website" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image:width"  content="1200" />
+<meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 
 <!-- Google tag (gtag.js) -->
@@ -40,7 +43,6 @@
   <link rel="canonical" href="https://colourdetails.com/blindness.html" />
   <title>Color Blindness Simulator — 8 CVD Variants with Hex Values</title>
   <meta name="description" content="See any hex color as it appears with 8 color vision deficiency variants: achromatopsia, protanopia, deuteranopia, tritanopia, and anomalous trichromacy." />
-  <!--
   <meta property="og:type"        content="website" />
   <meta property="og:title"       content="Color Blindness Simulator — 8 CVD Variants with Hex Values" />
   <meta property="og:description" content="See any hex color as it appears with 8 color vision deficiency variants: achromatopsia, protanopia, deuteranopia, tritanopia, and anomalous trichromacy." />
@@ -51,20 +53,60 @@
   <meta name="twitter:title"      content="Color Blindness Simulator — 8 CVD Variants with Hex Values" />
   <meta name="twitter:description" content="See any hex color as it appears with 8 color vision deficiency variants: achromatopsia, protanopia, deuteranopia, tritanopia, and anomalous trichromacy." />
   <meta name="twitter:image"      content="https://colourdetails.com/assets/og-blindness.png" />
-  -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebApplication",
-    "name": "Color Blindness Simulator",
-    "description": "Simulate how a hex color appears with 8 color vision deficiency variants.",
-    "about": { 
-      "@type": "MedicalCondition", 
-      "name": "Color vision deficiency" 
-    }
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Color Blindness Simulator",
+        "description": "Simulate how a hex color appears with 8 color vision deficiency variants.",
+        "about": { 
+           "@type": "MedicalCondition", 
+           "name": "Color vision deficiency", 
+           "alternateName": "Color blindness" 
+        }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "What is color blindness?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Color blindness (color vision deficiency) is a reduced ability to distinguish between certain colors. It affects roughly 1 in 12 men and 1 in 200 women."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What are the different types of color blindness?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "The main types are protanopia (red-blind), deuteranopia (green-blind), tritanopia (blue-blind), and monochromacy (total color blindness). Anomalous trichromacy includes milder variants like protanomaly, deuteranomaly, and tritanomaly."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How is color blindness simulated?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Simulations use color transformation matrices derived from empirical color-matching data, such as the Machado, Oliveira, and Fernandes (2009) model. Each matrix transforms the RGB channels to approximate how a person with that deficiency perceives the color."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "What is achromatopsia?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Achromatopsia is total color blindness, where a person sees only in shades of gray. It is the rarest form, affecting roughly 1 in 30,000 people."
+            }
+          }
+        ]
+      }
+    ]
   }
   </script>
-
 </head>
 <body data-page="blindness">
   <header class="site-header">
@@ -115,14 +157,20 @@
   </div>
 </header>
   <main class="container">
-    <h1>Color Blindness Simulator</h1>
+    <h1>Color Blindness Simulator — See Any Hex Color with 8 CVD Types</h1>
+    <p class="lede">
+      See how any hex color appears to people with color vision deficiency.
+      Simulate protanopia, deuteranopia, tritanopia, achromatopsia, and the
+      milder anomalous trichromacy variants, with exact hex values for each.
+    </p>
+    
     <form id="cvd-form" class="card">
       <label for="cvd-hex">Color</label>
       <input id="cvd-hex" type="text" value="beff00" maxlength="7" />
     </form>
 
     <section class="card">
-      <h2>Simulated views</h2>
+      <h2>Simulated views of #<span id="cvd-base-hex">BEFF00</span></h2>
       <div id="cvd-grid"></div>
     </section>
 
@@ -131,6 +179,27 @@
       <p class="muted">The same accent used as a button, with text chosen for contrast in each variant.</p>
       <div id="cvd-ui"></div>
     </section>
+
+    <section class="card faq">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>What is color blindness?</summary>
+        <p>Color blindness (color vision deficiency) is a reduced ability to distinguish between certain colors. It affects roughly 1 in 12 men and 1 in 200 women.</p>
+      </details>
+      <details>
+        <summary>What are the different types of color blindness?</summary>
+        <p>The main types are protanopia (red-blind), deuteranopia (green-blind), tritanopia (blue-blind), and monochromacy (total color blindness). Anomalous trichromacy includes milder variants like protanomaly, deuteranomaly, and tritanomaly.</p>
+      </details>
+      <details>
+        <summary>How is color blindness simulated?</summary>
+        <p>Simulations use color transformation matrices derived from empirical color-matching data, such as the Machado, Oliveira, and Fernandes (2009) model. Each matrix transforms the RGB channels to approximate how a person with that deficiency perceives the color.</p>
+      </details>
+      <details>
+        <summary>What is achromatopsia?</summary>
+        <p>Achromatopsia is total color blindness, where a person sees only in shades of gray. It is the rarest form, affecting roughly 1 in 30,000 people.</p>
+      </details>
+    </section>
+
   </main>
   <footer class="site-footer">
   <div class="site-footer-inner">

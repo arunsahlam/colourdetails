@@ -4,7 +4,7 @@
   Rebuild:   node scripts/build-pages.js
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
   <!-- _partials/head-meta.html -->
 <meta charset="UTF-8" />
@@ -26,6 +26,9 @@
 <!-- Open Graph defaults (per-page overrides come after this include) -->
 <meta property="og:site_name" content="Color Guide" />
 <meta property="og:type" content="website" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image:width"  content="1200" />
+<meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 
 <!-- Google tag (gtag.js) -->
@@ -37,20 +40,20 @@
 
   gtag('config', 'G-EYJ4WV7T5W');
 </script>
-  <link rel="canonical" id="canonical-link" href="/" />
-  <link rel="canonical" href="https://colourdetails.com/" />
-  <link rel="canonical" href="https://colourdetails.com/index.html" />
-  <title>Hex Colour Preview & Converter — RGB, HSL, Harmonies, WCAG</title>
+  <link rel="canonical" id="canonical-link" href="https://colourdetails.com/" />
+  <link rel="alternate" hreflang="en" href="https://colourdetails.com/" />
+  <link rel="alternate" hreflang="x-default" href="https://colourdetails.com/" />
+  <title>Hex Color Preview & Converter — RGB, HSL, Harmonies, WCAG</title>
   <meta name="description" content="Preview any hex color and get RGB, HSL, CMYK, CIELAB, harmonies, shades, contrast ratios, and copy-ready CSS — all on one page." />
   <link rel="manifest" href="/site.webmanifest" />
   <meta property="og:type"        content="website" />
-  <meta property="og:title"       content="Hex Colour Preview & Converter — RGB, HSL, Harmonies, WCAG" />
+  <meta property="og:title"       content="Hex Color Preview & Converter — RGB, HSL, Harmonies, WCAG" />
   <meta property="og:description" content="Preview any hex color and get RGB, HSL, CMYK, CIELAB, harmonies, shades, contrast ratios, and copy-ready CSS — all on one page." />
   <meta property="og:url"         content="https://colourdetails.com/" />
   <meta property="og:image"       content="https://colourdetails.com/assets/og-home.png" />
   <meta property="og:site_name"   content="Color Guide" />
   <meta name="twitter:card"       content="summary_large_image" />
-  <meta name="twitter:title"      content="Hex Colour Preview & Converter — RGB, HSL, Harmonies, WCAG" />
+  <meta name="twitter:title"      content="Hex Color Preview & Converter — RGB, HSL, Harmonies, WCAG" />
   <meta name="twitter:description" content="Preview any hex color and get RGB, HSL, CMYK, CIELAB, harmonies, shades, contrast ratios, and copy-ready CSS — all on one page." />
   <meta name="twitter:image"      content="https://colourdetails.com/assets/og-home.png" />
   <script type="application/ld+json" id="jsonld">
@@ -139,8 +142,7 @@
     <noscript>
       <p class="notice">
         JavaScript is required for the interactive color preview.
-        You can still view color details on the
-        <a href="/colour/index">server-rendered pages</a>.
+        Browse <a href="/colors.html">all named colors</a> for server-rendered details.
       </p>
     </noscript>
 

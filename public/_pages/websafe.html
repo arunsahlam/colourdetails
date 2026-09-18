@@ -1,11 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
   <!-- @include head-meta -->
   <link rel="canonical" href="https://colourdetails.com/websafe.html" />
   <title>Web-Safe Colors — 216 Hex Chart with RGB Values</title>
   <meta name="description" content="The complete 216-color web-safe palette with hex and RGB values. Every color is a clickable swatch linking to its detail page." />
-  <!--
   <meta property="og:type"        content="website" />
   <meta property="og:title"       content="Web-Safe Colors — 216 Hex Chart with RGB Values" />
   <meta property="og:description" content="The complete 216-color web-safe palette with hex and RGB values. Every color is a clickable swatch linking to its detail page." />
@@ -16,7 +15,6 @@
   <meta name="twitter:title"      content="Web-Safe Colors — 216 Hex Chart with RGB Values" />
   <meta name="twitter:description" content="The complete 216-color web-safe palette with hex and RGB values. Every color is a clickable swatch linking to its detail page." />
   <meta name="twitter:image"      content="https://colourdetails.com/assets/og-websafe.png" />
-  -->
   <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -30,13 +28,23 @@
   <!-- @include header -->
 
   <main class="container">
-    <h1>Web-Safe Colors</h1>
-
+    <h1>Web-Safe Colors — 216-Color Hex Chart</h1>
+    <p class="lede">
+      The complete 216-color web-safe palette. Every swatch shows its hex
+      code and RGB values, with a link to the color's full detail page.
+    </p>
     <section class="card">
       <p class="muted">
         The 216-color web-safe palette uses only the values
         <code>00, 33, 66, 99, CC, FF</code> for each RGB channel —
         guaranteeing the same rendering across all 256-color displays.
+      </p>
+      <p class="muted">
+        Web-safe colors were essential in the 1990s when monitors and operating
+        systems could dither or shift colors unpredictably. Modern displays render
+        the full 16.7-million-color sRGB gamut, so the web-safe palette is no
+        longer required — but it remains useful for email HTML, legacy systems,
+        and any context where exact color rendering must be guaranteed.
       </p>
       <div id="websafe-grid" class="websafe-grid"></div>
     </section>

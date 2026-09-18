@@ -4,7 +4,7 @@
   Rebuild:   node scripts/build-pages.js
 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-US">
 <head>
   <!-- _partials/head-meta.html -->
 <meta charset="UTF-8" />
@@ -26,6 +26,9 @@
 <!-- Open Graph defaults (per-page overrides come after this include) -->
 <meta property="og:site_name" content="Color Guide" />
 <meta property="og:type" content="website" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:image:width"  content="1200" />
+<meta property="og:image:height" content="630" />
 <meta name="twitter:card" content="summary_large_image" />
 
 <!-- Google tag (gtag.js) -->
@@ -40,7 +43,6 @@
   <link rel="canonical" href="https://colourdetails.com/subtract.html" />
   <title>Color Subtraction — Subtract Two Hex Colors in CMYK</title>
   <meta name="description" content="Subtract one hex color from another in CMYK space. See the resulting color, the four arithmetic operations, and copy-ready values." />
-  <!--
   <meta property="og:type"        content="website" />
   <meta property="og:title"       content="Color Subtraction — Subtract Two Hex Colors in CMYK" />
   <meta property="og:description" content="Subtract one hex color from another in CMYK space. See the resulting color, the four arithmetic operations, and copy-ready values." />
@@ -51,7 +53,6 @@
   <meta name="twitter:title"      content="Color Subtraction — Subtract Two Hex Colors in CMYK" />
   <meta name="twitter:description" content="Subtract one hex color from another in CMYK space. See the resulting color, the four arithmetic operations, and copy-ready values." />
   <meta name="twitter:image"      content="https://colourdetails.com/assets/og-subtract.png" />
-  -->
   <script type="application/ld+json">
   { 
     "@type": "WebApplication", 
@@ -111,6 +112,11 @@
 </header>
   <main class="container">
     <h1>Color Subtraction</h1>
+    <p class="lede">
+  Subtract one hex color from another in CMYK space. See the resulting
+  color along with the four arithmetic operations — addition, subtraction,
+  and their reverses — so you can compare how each operation affects hue.
+</p>
     <form id="sub-form" class="card">
       <div class="blend-row">
         <label>From <input id="sub-a" type="text" value="beff00" maxlength="7" /></label>
