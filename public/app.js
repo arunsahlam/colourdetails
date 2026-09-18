@@ -97,6 +97,36 @@ function applyColor(hex6) {
 
   const canonical = document.getElementById("canonical-link");
   if (canonical) canonical.setAttribute("href", `/hex/${full.toLowerCase()}`);
+
+  // Dynamic head / H1 updates for SEO and crawlability
+  const url = `https://colourdetails.com/hex/${full.toLowerCase()}`;
+  let name = "";
+  try {
+    const record = window.COLOR_NAMES_DATA?.find((r) => r.hex === full.toUpperCase());
+    if (record && record.names && record.names.length) name = record.names[0].name;
+  } catch (e) {}
+  const displayName = name ? `${name} ` : "";
+  const title = `${displayName}#${full.toUpperCase()} — RGB, HSL, CMYK, Harmonies & CSS`;
+  const desc = name
+    ? `${name} (#${full.toUpperCase()}). RGB, HSL, CMYK, CIELAB, color harmonies, shades, tints, WCAG contrast ratios, and copy-ready CSS.`
+    : `#${full.toUpperCase()} color details. RGB, HSL, CMYK, CIELAB, harmonies, shades, tints, contrast ratios, and CSS examples.`;
+
+  document.title = title;
+  const setMeta = (attr, val, prop = "name") => {
+    let el = document.querySelector(`meta[${prop}="${attr}"]`);
+    if (!el) { el = document.createElement("meta"); el.setAttribute(prop, attr); document.head.appendChild(el); }
+    el.setAttribute("content", val);
+  };
+  setMeta("description", desc);
+  setMeta("og:title", title, "property");
+  setMeta("og:description", desc, "property");
+  setMeta("og:url", url, "property");
+  setMeta("twitter:title", title);
+  setMeta("twitter:description", desc);
+
+  const h1 = document.querySelector("main h1");
+  if (h1) h1.textContent = name ? `${name} #${full.toUpperCase()}` : `#${full.toUpperCase()}`;
+
   updateJSONLD(full);
 
   // Theme-color meta only
